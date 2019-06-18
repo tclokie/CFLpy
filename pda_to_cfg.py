@@ -78,10 +78,21 @@ print(V.__contains__())
 # Instantiate P
 for v in V:
     P[v] = set()
-    
-    # m = 0
-    
-    # m = 1
-    
-    # m = 2
 
+# Fill in P for m=0
+for q in states:
+    for a in ['0', '1', '']
+        for A in stack_alphabet:
+            if (delta.__contains__((q, a, A))):
+                (q_1, B) = delta[(q,a,A)]
+                m = len(B)
+                if (m == 0):
+                    P[q,A,q_1].add([a])
+                elif (m == 1):
+                    P[q,A,q_1].add([a, v_1])
+                elif (m == 2):
+                    P[q,A,q_1].add([a, v_1, v_2])
+                    
+                else:
+                    print("SANITY CHECK FAILED")
+                    break
