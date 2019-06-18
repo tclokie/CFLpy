@@ -73,26 +73,32 @@ for q in states:
             V.add((q,A,p))
 
 S = ('-0', 'Z', 'END')
-print(V.__contains__())
+print(V.__contains__(S))
 
 # Instantiate P
 for v in V:
-    P[v] = set()
+    P[v] = []
 
-# Fill in P for m=0
+# Fill in P
 for q in states:
-    for a in ['0', '1', '']
+    for a in ['0', '1', '']:
         for A in stack_alphabet:
             if (delta.__contains__((q, a, A))):
                 (q_1, B) = delta[(q,a,A)]
                 m = len(B)
                 if (m == 0):
-                    P[q,A,q_1].add([a])
+                    P[q,A,q_1].append([a])
                 elif (m == 1):
-                    P[q,A,q_1].add([a, v_1])
+                    B_1 = B[0]
+                    for q_2 in states:
+                        P[q,A,q_2].append([a, (q_1, B_1, q_2)])
                 elif (m == 2):
-                    P[q,A,q_1].add([a, v_1, v_2])
-                    
+                    B_1 = B[0]
+                    B_2 = B[1]
+                    for q_2 in states:
+                        for q_3 in states:
+                            P[q,A,q_3].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
                 else:
                     print("SANITY CHECK FAILED")
                     break
+
