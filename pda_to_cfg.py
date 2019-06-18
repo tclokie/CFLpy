@@ -102,3 +102,28 @@ for q in states:
                     print("SANITY CHECK FAILED")
                     break
 
+# Eliminate dead production rules
+flag = True
+while (flag):
+    print("DELETING...")
+    flag = False
+    to_remove_from_V = []
+    to_remove_from_P = []
+    for v in V:
+        if (P[v] == []):
+            flag = True
+            to_remove_from_V.append(v)
+    
+    for v in to_remove_from_V:
+        print('\t', v)
+        V.remove(v)
+        del P[v]
+        for (left, right) in P.items():
+            for production in right:
+                if (production.__contains__(v)):
+                    print('\t\t', left, '\t', production)
+                    to_remove_from_P.append((right, production))
+    
+    for (right, production) in to_remove_from_P:
+        right.remove(production)
+
