@@ -1,6 +1,6 @@
 # PDA info
 states = {'-0', '-1', '-2', '+2', '+1(1)', '+1(10)', '+0(100)', '+0(10)', '+0(000)', 'END'}
-#alphabet = {'0', '1'}
+alphabet = {'0', '1', ''}
 stack_alphabet = {'Z', 'X'}
 start_state = '-0'
 start_stack = ['Z']
@@ -49,6 +49,10 @@ delta = {
 
 
 
+
+
+
+
 # Make a CFG
 
 V = set()
@@ -70,7 +74,7 @@ for v in V:
 
 # Fill in P
 for q in states:
-    for a in ['0', '1', '']:
+    for a in alphabet:
         for A in stack_alphabet:
             if ((q, a, A) in delta):
                 (q_1, B) = delta[(q, a, A)]
@@ -81,15 +85,13 @@ for q in states:
                     B_1 = B[0]
                     for q_2 in states:
                         P[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
-                elif (m == 2):
+                else:
+                    assert (m == 2)
                     B_1 = B[0]
                     B_2 = B[1]
                     for q_2 in states:
                         for q_3 in states:
                             P[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
-                else:
-                    print("SANITY CHECK FAILED")
-                    break
 
 
 
@@ -103,7 +105,7 @@ def find_reachable_vars (start):
         for var in goes_to:
             for i in range (1, len(var)):
                 next = var[i]
-                if (not seen.__contains__(next)):
+                if (not next in seen):
                     seen.add(next)
                     stack.append(next)
     return seen
@@ -141,3 +143,50 @@ while (flag):
         right.remove(production)
 
 
+
+
+
+def int_to_bin(x):
+    return x.__format__('b')
+
+def b_count(x):
+    return int_to_bin(x).count('1')
+
+# Generate some values to test; using leftmost derivations only
+import queue
+import random
+q = queue.PriorityQueue()
+q.put((1,[S]))
+flimsy_numbers = []
+while (len(flimsy_numbers) < 2048 and not q.empty()):
+    next = q.get()[1]
+    contains_var = False
+    i = 0
+    while (i < len(next) and not contains_var):
+        part = next[i]
+        if (part in V):
+            contains_var = True
+            for production in P[part]:
+                new_array = next[0:i] + production + next[i+1:]
+                new_tuple = (len(new_array) + random.random(), new_array)
+                q.put(new_tuple)
+        else:
+            assert part in alphabet
+        i += 1
+
+    if (not contains_var):
+        x = ''
+        for a in next[::-1]:    # concatenate symbols in reverse order
+            x += a
+        x = int(x,2) # convert to integer
+        assert (x not in flimsy_numbers)
+        flimsy_numbers.append(x)
+        #print (x, '\t', int_to_bin(x), '\t', int_to_bin(3*x))
+        assert (b_count(x) > b_count(3*x))
+
+flimsy_numbers.sort()
+
+f = open("flimsy_CFG_generated.txt", 'w')
+for x in flimsy_numbers:
+    f.writeline(str(x))
+f.close()
