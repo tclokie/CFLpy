@@ -65,8 +65,7 @@ for q in states:
         for p in states:
             V.add((q, A, p))
 
-# Sanity check
-print("Sanity check:", S in V)
+assert (S in V) # Sanity check
 
 # Instantiate P: set of productions
 for v in V:
@@ -86,7 +85,7 @@ for q in states:
                     for q_2 in states:
                         P[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
                 else:
-                    assert (m == 2)
+                    assert (m == 2) # Sanity check
                     B_1 = B[0]
                     B_2 = B[1]
                     for q_2 in states:
@@ -117,9 +116,9 @@ while (flag):
     count = 0
     for p in P.values():
         count += len(p)
-    print(len(V), 'variables, and', count, 'production rules')
+    #print(len(V), 'variables, and', count, 'production rules')
     
-    print("DELETING...")
+    #print("DELETING...")
     flag = False
     to_remove_from_V = set()
     to_remove_from_P = []
@@ -130,13 +129,13 @@ while (flag):
             to_remove_from_V.add(v)
     
     for v in to_remove_from_V:
-        print('\t', v)
+        #print('\t', v)
         V.remove(v)
         del P[v]
         for (left, right) in P.items():
             for production in right:
                 if (v in production):
-                    print('\t\t', left, '\t', production)
+                    #print('\t\t', left, '\t', production)
                     to_remove_from_P.append((right, production))
     
     for (right, production) in to_remove_from_P:
@@ -157,7 +156,7 @@ import queue
 import random
 q = queue.PriorityQueue()
 q.put((1,[S]))
-flimsy_numbers = []
+flimsy_numbers = set()
 while (len(flimsy_numbers) < 2048 and not q.empty()):
     next = q.get()[1]
     contains_var = False
@@ -179,14 +178,17 @@ while (len(flimsy_numbers) < 2048 and not q.empty()):
         for a in next[::-1]:    # concatenate symbols in reverse order
             x += a
         x = int(x,2) # convert to integer
-        assert (x not in flimsy_numbers)
-        flimsy_numbers.append(x)
-        #print (x, '\t', int_to_bin(x), '\t', int_to_bin(3*x))
+        assert (x not in flimsy_numbers) # confirm that x has 
+        flimsy_numbers.add(x)
         assert (b_count(x) > b_count(3*x))
 
-flimsy_numbers.sort()
+del q
+flimsy = []
+for n in flimsy_numbers:
+    flimsy.append(n)
+flimsy.sort()
 
 f = open("flimsy_CFG_generated.txt", 'w')
-for x in flimsy_numbers:
-    f.writeline(str(x))
+for n in flimsy:
+    f.write(str(n) + '\n')
 f.close()
