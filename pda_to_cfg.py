@@ -1,50 +1,36 @@
 # PDA info
-states = {'-0', '-1', '-2', '+2', '+1(1)', '+1(10)', '+0(100)', '+0(10)', '+0(000)', 'END'}
+states = {'-0', '-1', '-2', '+2', '+1', '+0', 'END'}
 alphabet = {'0', '1', ''}
 stack_alphabet = {'Z', 'X'}
 start_state = '-0'
 start_stack = ['Z']
 delta = {
-    ('-0',      '0', 'Z'): ('-0',      'Z'),
-    ('-0',      '0', 'X'): ('-0',      'X'),
-    ('-0',      '1', 'Z'): ('-1',      'Z'),
-    ('-0',      '1', 'X'): ('-1',      'X'),
-    ('-1',      '0', 'Z'): ('-0',     'XZ'),
-    ('-1',      '0', 'X'): ('-0',     'XX'),
-    ('-1',      '1', 'Z'): ('+2',      'Z'),
-    ('-1',      '1', 'X'): ('-2',       ''),
-    ('-2',      '0', 'Z'): ('-1',      'Z'),
-    ('-2',      '0', 'X'): ('-1',      'X'),
-    ('-2',      '1', 'Z'): ('-2',      'Z'),
-    ('-2',      '1', 'X'): ('-2',      'X'),
-    ('+2',      '0', 'Z'): ('+1(10)',  'Z'),
-    ('+2',      '0', 'X'): ('+1(10)',  'X'),
-    ('+2',      '1', 'Z'): ('+2',      'Z'),
-    ('+2',      '1', 'X'): ('+2',      'X'),
-    ('+1(10)',  '0', 'Z'): ('-0',      'Z'),
-    ('+1(10)',  '0', 'X'): ('+0(100)',  ''),
-    ('+1(10)',  '1', 'Z'): ('+2',     'XZ'),
-    ('+1(10)',  '1', 'X'): ('+2',     'XX'),
-    ('+1(1)',   '0', 'Z'): ('-0',      'Z'),
-    ('+1(1)',   '0', 'X'): ('+0(10)',   ''),
-    ('+1(1)',   '1', 'Z'): ('+2',     'XZ'),
-    ('+1(1)',   '1', 'X'): ('+2',     'XX'),
-    ('+0(000)', '0', 'Z'): ('+0(000)', 'Z'),
-    ('+0(000)', '0', 'X'): ('+0(000)', 'X'),
-    ('+0(000)', '1', 'Z'): ('+1(1)',   'Z'),
-    ('+0(000)', '1', 'X'): ('+1(1)',   'X'),
-    ('+0(10)',  '0', 'Z'): ('+0(100)', 'Z'),
-    ('+0(10)',  '0', 'X'): ('+0(100)', 'X'),
-    ('+0(10)',  '1', 'Z'): ('+1(1)',   'Z'),
-    ('+0(10)',  '1', 'X'): ('+1(1)',   'X'),
-    ('+0(100)', '0', 'Z'): ('+0(000)', 'Z'),
-    ('+0(100)', '0', 'X'): ('+0(000)', 'X'),
-    ('+0(100)', '1', 'Z'): ('+1(1)',   'Z'),
-    ('+0(100)', '1', 'X'): ('+1(1)',   'X'),
-    ('+0(100)',  '', 'Z'): ('END',      ''),
-    ('+0(100)',  '', 'X'): ('END',      ''),
-    ('END',      '', 'Z'): ('END',      ''),
-    ('END',      '', 'X'): ('END',      '')
+    ('-0', '0', 'Z'): [('-0',  'Z')],
+    ('-0', '0', 'X'): [('-0',  'X')],
+    ('-0', '1', 'Z'): [('-1',  'Z')],
+    ('-0', '1', 'X'): [('-1',  'X')],
+    ('-1', '0', 'Z'): [('-0', 'XZ')],
+    ('-1', '0', 'X'): [('-0', 'XX')],
+    ('-1', '1', 'Z'): [('+2',  'Z')],
+    ('-1', '1', 'X'): [('-2',   '')],
+    ('-2', '0', 'Z'): [('-1',  'Z')],
+    ('-2', '0', 'X'): [('-1',  'X')],
+    ('-2', '1', 'Z'): [('-2',  'Z')],
+    ('-2', '1', 'X'): [('-2',  'X')],
+    ('+2', '0', 'Z'): [('+1',  'Z')],
+    ('+2', '0', 'X'): [('+1',  'X')],
+    ('+2', '1', 'Z'): [('+2',  'Z')],
+    ('+2', '1', 'X'): [('+2',  'X'), ('END', '')],
+    ('+1', '0', 'Z'): [('-0',  'Z')],
+    ('+1', '0', 'X'): [('+0',   '')],
+    ('+1', '1', 'Z'): [('+2', 'XZ'), ('END', '')],
+    ('+1', '1', 'X'): [('+2', 'XX'), ('END', '')],
+    ('+0', '0', 'Z'): [('+0',  'Z')],
+    ('+0', '0', 'X'): [('+0',  'X')],
+    ('+0', '1', 'Z'): [('+1',  'Z')],
+    ('+0', '1', 'X'): [('+1',  'X'), ('END', '')],
+    ('END', '', 'Z'): [('END', '')],
+    ('END', '', 'X'): [('END', '')]
 }
 
 
@@ -76,21 +62,21 @@ for q in states:
     for a in alphabet:
         for A in stack_alphabet:
             if ((q, a, A) in delta):
-                (q_1, B) = delta[(q, a, A)]
-                m = len(B)
-                if (m == 0):
-                    P[(q, A, q_1)].append([a])
-                elif (m == 1):
-                    B_1 = B[0]
-                    for q_2 in states:
-                        P[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
-                else:
-                    assert (m == 2) # Sanity check
-                    B_1 = B[0]
-                    B_2 = B[1]
-                    for q_2 in states:
-                        for q_3 in states:
-                            P[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
+                for (q_1, B) in delta[(q, a, A)]:
+                    m = len(B)
+                    if (m == 0):
+                        P[(q, A, q_1)].append([a])
+                    elif (m == 1):
+                        B_1 = B[0]
+                        for q_2 in states:
+                            P[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
+                    else:
+                        assert (m == 2) # Sanity check
+                        B_1 = B[0]
+                        B_2 = B[1]
+                        for q_2 in states:
+                            for q_3 in states:
+                                P[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
 
 
 
@@ -116,9 +102,9 @@ while (flag):
     count = 0
     for p in P.values():
         count += len(p)
-    #print(len(V), 'variables, and', count, 'production rules')
+    print(len(V), 'variables, and', count, 'production rules')
     
-    #print("DELETING...")
+    print("DELETING...")
     flag = False
     to_remove_from_V = set()
     to_remove_from_P = []
@@ -145,6 +131,7 @@ while (flag):
 
 
 
+
 def int_to_bin(x):
     return x.__format__('b')
 
@@ -157,7 +144,7 @@ import random
 q = queue.PriorityQueue()
 q.put((1,[S]))
 flimsy_numbers = set()
-while (len(flimsy_numbers) < 2048 and not q.empty()):
+while (len(flimsy_numbers) < 8192 and not q.empty()):
     next = q.get()[1]
     contains_var = False
     i = 0
@@ -178,9 +165,11 @@ while (len(flimsy_numbers) < 2048 and not q.empty()):
         for a in next[::-1]:    # concatenate symbols in reverse order
             x += a
         x = int(x,2) # convert to integer
-        assert (x not in flimsy_numbers) # confirm that x has 
+        assert (x not in flimsy_numbers) # confirm that x doesn't have multiple derivations
         flimsy_numbers.add(x)
-        assert (b_count(x) > b_count(3*x))
+        if (b_count(x) <= b_count(3*x)): # confirm that x is 3-flimsy
+            print(x)
+            assert (False)
 
 del q
 flimsy = []
