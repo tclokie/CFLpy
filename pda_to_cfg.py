@@ -102,9 +102,9 @@ while (flag):
     count = 0
     for p in P.values():
         count += len(p)
-    #print(len(V), 'variables, and', count, 'production rules')
+    print(len(V), 'variables, and', count, 'production rules')
     
-    #print("DELETING...")
+    print("DELETING...")
     flag = False
     to_remove_from_V = set()
     to_remove_from_P = []
@@ -131,105 +131,6 @@ while (flag):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Print code for Maple: Groebner Basis
-
-names = {S: "S", '': '1', '0':'x', '1': 'x'}
-
-arr = [('-2', 'Z', 'END'),
-('-1', 'Z', 'END'),
-('+0', 'X', 'END'),
-('+0', 'X', '+0'),
-('+2', 'X', '+0'),
-('+2', 'X', 'END'),
-('+1', 'X', 'END'),
-('+2', 'Z', 'END'),
-('+0', 'X', '-2'),
-('-2', 'X', '-2'),
-('-0', 'X', 'END'),
-('+1', 'X', '+0'),
-('+1', 'Z', 'END'),
-('-0', 'X', '+0'),
-('-2', 'X', '+0'),
-('-1', 'X', '+0'),
-('-1', 'X', 'END'),
-('-1', 'X', '-2'),
-('+1', 'X', '-2'),
-('+0', 'Z', 'END'),
-('+2', 'X', '-2'),
-('-2', 'X', 'END'),
-('-0', 'X', '-2'),
-('-0', 'X', '+2'),
-('-1', 'X', '+1'),
-('-1', 'X', '+2'),
-('+0', 'X', '-1'),
-('+0', 'X', '+1'),
-('-2', 'X', '+2'),
-('+1', 'X', '+2'),
-('-1', 'X', '-0'),
-('+0', 'X', '-0'),
-('-1', 'X', '-1'),
-('-0', 'X', '-0'),
-('+2', 'X', '-1'),
-('-0', 'X', '+1'),
-('END', 'Z', 'END'),
-('-2', 'X', '-0'),
-('-0', 'X', '-1'),
-('+1', 'X', '-1'),
-('END', 'X', 'END'),
-('+0', 'X', '+2'),
-('+1', 'X', '+1'),
-('-2', 'X', '+1'),
-('-2', 'X', '-1'),
-('+2', 'X', '-0'),
-('+1', 'X', '-0'),
-('+2', 'X', '+2'),
-('+2', 'X', '+1')]
-
-for v in V:
-    if v != S:
-        assert (v in arr)
-        counter = arr.index(v)
-        names[v] = "V_"+str(counter)
-        counter += 1
-        print(names[v], ":=", v)
-print("\n\n\n")
-
-print('eqs := [')
-for v in V:
-    print('-' + names[v], end='')
-    for ps in P[v]:
-        print(' + ', end='')
-        for j in range(len(ps)):
-            p = ps[j]
-            if (j > 0):
-                print('*', end='')
-            print(names[p], end='')
-    print(', ') # NOTE: manually remove the last comma
-print('];')
-
-print('Groebner[Basis](eqs, lexdeg([', end='')
-for i in range(len(arr)):
-    print('V_'+str(i), end=', ') # NOTE: manually remove the last comma
-print('], [S]));')
-
-print("algeq := %[1];")
-#print("map(series, [solve(algeq, S)], x);")
-
-'''     Test validity of CFG by generating samples:
 
 def int_to_bin(x):
     return x.__format__('b')
@@ -280,5 +181,3 @@ f = open("flimsy_CFG_generated.txt", 'w')
 for n in flimsy:
     f.write(str(n) + '\n')
 f.close()
-
-'''
