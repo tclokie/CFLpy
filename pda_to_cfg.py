@@ -1,3 +1,6 @@
+import queue
+import random
+
 # Create V: set of variables
 def init_variables (states, stack_alphabet):
     V = set()
@@ -130,40 +133,92 @@ def generate_CFG (states, alphabet, stack_alphabet, transitions, start_state, st
     return (V, alphabet, P, S)
 
 
-# PDA info
-states = {'-0', '-1', '-2', '+2', '+1', '+0', 'END'}
-alphabet = {'0', '1', ''}
-stack_alphabet = {'Z', 'X'}
-start_state = '-0'
-start_stack = ['Z']
-delta = {
-    ('-0', '0', 'Z'): [('-0',  'Z')],
-    ('-0', '0', 'X'): [('-0',  'X')],
-    ('-0', '1', 'Z'): [('-1',  'Z')],
-    ('-0', '1', 'X'): [('-1',  'X')],
-    ('-1', '0', 'Z'): [('-0', 'XZ')],
-    ('-1', '0', 'X'): [('-0', 'XX')],
-    ('-1', '1', 'Z'): [('+2',  'Z')],
-    ('-1', '1', 'X'): [('-2',   '')],
-    ('-2', '0', 'Z'): [('-1',  'Z')],
-    ('-2', '0', 'X'): [('-1',  'X')],
-    ('-2', '1', 'Z'): [('-2',  'Z')],
-    ('-2', '1', 'X'): [('-2',  'X')],
-    ('+2', '0', 'Z'): [('+1',  'Z')],
-    ('+2', '0', 'X'): [('+1',  'X')],
-    ('+2', '1', 'Z'): [('+2',  'Z')],
-    ('+2', '1', 'X'): [('+2',  'X'), ('END', '')],
-    ('+1', '0', 'Z'): [('-0',  'Z')],
-    ('+1', '0', 'X'): [('+0',   '')],
-    ('+1', '1', 'Z'): [('+2', 'XZ'), ('END', '')],
-    ('+1', '1', 'X'): [('+2', 'XX'), ('END', '')],
-    ('+0', '0', 'Z'): [('+0',  'Z')],
-    ('+0', '0', 'X'): [('+0',  'X')],
-    ('+0', '1', 'Z'): [('+1',  'Z')],
-    ('+0', '1', 'X'): [('+1',  'X'), ('END', '')],
-    ('END', '', 'Z'): [('END', '')],
-    ('END', '', 'X'): [('END', '')]
-}
+def create_flimsy_PDA (k): # Only works for k=3 so far
+    assert (k == 3)
+    states = {'-0', '-1', '-2', '+2', '+1', '+0', 'END'}
+    alphabet = {'0', '1', ''}
+    stack_alphabet = {'Z', 'X'}
+    start_state = '-0'
+    start_stack = ['Z']
+    delta = {
+        ('-0', '0', 'Z'): [('-0',  'Z')],
+        ('-0', '0', 'X'): [('-0',  'X')],
+        ('-0', '1', 'Z'): [('-1',  'Z')],
+        ('-0', '1', 'X'): [('-1',  'X')],
+        ('-1', '0', 'Z'): [('-0', 'XZ')],
+        ('-1', '0', 'X'): [('-0', 'XX')],
+        ('-1', '1', 'Z'): [('+2',  'Z')],
+        ('-1', '1', 'X'): [('-2',   '')],
+        ('-2', '0', 'Z'): [('-1',  'Z')],
+        ('-2', '0', 'X'): [('-1',  'X')],
+        ('-2', '1', 'Z'): [('-2',  'Z')],
+        ('-2', '1', 'X'): [('-2',  'X')],
+        ('+2', '0', 'Z'): [('+1',  'Z')],
+        ('+2', '0', 'X'): [('+1',  'X')],
+        ('+2', '1', 'Z'): [('+2',  'Z')],
+        ('+2', '1', 'X'): [('+2',  'X'), ('END', '')],
+        ('+1', '0', 'Z'): [('-0',  'Z')],
+        ('+1', '0', 'X'): [('+0',   '')],
+        ('+1', '1', 'Z'): [('+2', 'XZ'), ('END', '')],
+        ('+1', '1', 'X'): [('+2', 'XX'), ('END', '')],
+        ('+0', '0', 'Z'): [('+0',  'Z')],
+        ('+0', '0', 'X'): [('+0',  'X')],
+        ('+0', '1', 'Z'): [('+1',  'Z')],
+        ('+0', '1', 'X'): [('+1',  'X'), ('END', '')],
+        ('END', '', 'Z'): [('END', '')],
+        ('END', '', 'X'): [('END', '')]
+    }
+    return (states, alphabet, stack_alphabet, start_state, start_stack, delta)
+
+def int_to_bin(x):
+    return x.__format__('b')
+
+def b_count(x):
+    return int_to_bin(x).count('1')
+
+
+# Generate some values to test; using leftmost derivations only
+def generate_values (V, alphabet, P, S, limit):
+    q = queue.PriorityQueue()
+    q.put((1,[S]))
+    flimsy_numbers = set()
+    while (len(flimsy_numbers) < limit and not q.empty()):
+        next = q.get()[1]
+        contains_var = False
+        i = 0
+        while (i < len(next) and not contains_var):
+            part = next[i]
+            if (part in V):
+                contains_var = True
+                for production in P[part]:
+                    new_array = next[0:i] + production + next[i+1:]
+                    new_tuple = (len(new_array) + random.random(), new_array)
+                    q.put(new_tuple)
+            else:
+                assert part in alphabet
+            i += 1
+
+        if (not contains_var):
+            x = ''
+            for a in next[::-1]:    # concatenate symbols in reverse order
+                x += a
+            x = int(x,2) # convert to integer
+            assert (x not in flimsy_numbers) # confirm that x doesn't have multiple derivations
+            flimsy_numbers.add(x)
+            if (b_count(x) <= b_count(3*x)): # confirm that x is 3-flimsy
+                print(x)
+                assert (False)
+
+    del q
+    flimsy = []
+    for n in flimsy_numbers:
+        flimsy.append(n)
+    flimsy.sort()
+    return flimsy
+
+
+
+(states, alphabet, stack_alphabet, start_state, start_stack, delta) = create_flimsy_PDA(3)
 
 # Turn it into a PDA
 (V, alphabet, P, S) = generate_CFG(states, alphabet, stack_alphabet, delta, start_state, start_stack)
@@ -188,55 +243,9 @@ print(alphabet)
 
 
 
-'''
-def int_to_bin(x):
-    return x.__format__('b')
-
-def b_count(x):
-    return int_to_bin(x).count('1')
-
-
-# Generate some values to test; using leftmost derivations only
-import queue
-import random
-q = queue.PriorityQueue()
-q.put((1,[S]))
-flimsy_numbers = set()
-while (len(flimsy_numbers) < 1048576 and not q.empty()):
-    next = q.get()[1]
-    contains_var = False
-    i = 0
-    while (i < len(next) and not contains_var):
-        part = next[i]
-        if (part in V):
-            contains_var = True
-            for production in P[part]:
-                new_array = next[0:i] + production + next[i+1:]
-                new_tuple = (len(new_array) + random.random(), new_array)
-                q.put(new_tuple)
-        else:
-            assert part in alphabet
-        i += 1
-
-    if (not contains_var):
-        x = ''
-        for a in next[::-1]:    # concatenate symbols in reverse order
-            x += a
-        x = int(x,2) # convert to integer
-        assert (x not in flimsy_numbers) # confirm that x doesn't have multiple derivations
-        flimsy_numbers.add(x)
-        if (b_count(x) <= b_count(3*x)): # confirm that x is 3-flimsy
-            print(x)
-            assert (False)
-
-del q
-flimsy = []
-for n in flimsy_numbers:
-    flimsy.append(n)
-flimsy.sort()
+cfg_output = generate_values(V, alphabet, P, S, 1048576)
 
 f = open("flimsy_CFG_generated.txt", 'w')
-for n in flimsy:
+for n in cfg_output:
     f.write(str(n) + '\n')
 f.close()
-'''
