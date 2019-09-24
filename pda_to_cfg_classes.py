@@ -18,14 +18,15 @@ def is_k_flimsy(x, k):
 
 
 class PDA:
-    '''Pushdown Automata'''
+    '''Pushdown Automata (accepting on empty stack only)'''
     def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
         self.states = states
         self.alphabet = alphabet
         self.stack_alphabet = stack_alphabet
-        self.transitions = transitions
         self.start_state = start_state
         self.start_stack = start_stack # assume list of length 1
+        self.transitions = transitions # here the top of the stack is on the RIGHT of the stack_after string
+        # TODO: verify that there are no infinite epsilon loops
 
     def to_CFG (self):
         # return CFG(self)
@@ -37,6 +38,38 @@ class PDA:
         cfg.populate_productions(self)
         cfg.eliminate_useless_productions()
         return cfg
+
+    def simulate (self, x): # boolean: does this PDA accept input x?
+        return self._simulate_(self.start_state, self.start_stack[0], x)
+
+    def _simulate_ (self, current_state, current_stack, x): # takes current stack as string with top as right
+        if current_stack == '':
+            return x == ""
+
+        if (len(x) > 0):
+            key = (current_state, x[0], current_stack[-1])
+            if (key in self.transitions):
+                next_steps = self.transitions[key]
+                for (new_state, new_stack) in next_steps:
+                    if self._simulate_(new_state, current_stack[0:-1]+new_stack, x[1:]):
+                        return True
+
+        key = (current_state, '', current_stack[-1])
+        if (key in self.transitions):
+            next_epsilon_steps = self.transitions[key]
+            for (new_state, new_stack) in next_epsilon_steps:
+                if self._simulate_(new_state, current_stack[0:-1]+new_stack, x):
+                    return True
+
+        return False
+
+
+
+
+
+
+
+
 
 
 
@@ -102,8 +135,8 @@ class CFG:
                                     self.productions[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
                             else:
                                 assert (m == 2) # Sanity check
-                                B_1 = B[0]
-                                B_2 = B[1]
+                                B_1 = B[1]
+                                B_2 = B[0]
                                 for q_2 in pda.states:
                                     for q_3 in pda.states:
                                         self.productions[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
@@ -271,11 +304,11 @@ def create_palindrome_pda ():
     start_state = "S"
     start_stack = ['Z']
     delta = {
-        ('S', 'a', 'Z'): [('S', 'aZ'), ('END', 'Z')],
+        ('S', 'a', 'Z'): [('S', 'Za'), ('END', 'Z')],
         ('S', 'a', 'a'): [('S', 'aa'), ('END', 'a')],
-        ('S', 'a', 'b'): [('S', 'ab'), ('END', 'b')],
-        ('S', 'b', 'Z'): [('S', 'bZ'), ('END', 'Z')],
-        ('S', 'b', 'a'): [('S', 'ba'), ('END', 'a')],
+        ('S', 'a', 'b'): [('S', 'ba'), ('END', 'b')],
+        ('S', 'b', 'Z'): [('S', 'Zb'), ('END', 'Z')],
+        ('S', 'b', 'a'): [('S', 'ab'), ('END', 'a')],
         ('S', 'b', 'b'): [('S', 'bb'), ('END', 'b')],
         ('S', '', 'Z'): [('END', 'Z')],
         ('S', '', 'a'): [('END', 'a')],
@@ -299,7 +332,7 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
         ('-0', '0', 'X'): [('-0',  'X')],
         ('-0', '1', 'Z'): [('-1',  'Z')],
         ('-0', '1', 'X'): [('-1',  'X')],
-        ('-1', '0', 'Z'): [('-0', 'XZ')],
+        ('-1', '0', 'Z'): [('-0', 'ZX')],
         ('-1', '0', 'X'): [('-0', 'XX')],
         ('-1', '1', 'Z'): [('+2',  'Z')],
         ('-1', '1', 'X'): [('-2',   '')],
@@ -313,7 +346,7 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
         ('+2', '1', 'X'): [('+2',  'X'), ('END', '')],
         ('+1', '0', 'Z'): [('-0',  'Z')],
         ('+1', '0', 'X'): [('+0',   '')],
-        ('+1', '1', 'Z'): [('+2', 'XZ'), ('END', '')],
+        ('+1', '1', 'Z'): [('+2', 'ZX'), ('END', '')],
         ('+1', '1', 'X'): [('+2', 'XX'), ('END', '')],
         ('+0', '0', 'Z'): [('+0',  'Z')],
         ('+0', '0', 'X'): [('+0',  'X')],
@@ -350,8 +383,18 @@ print(cfg.alphabet)
 
 
 
-
 pal_pda = create_palindrome_pda()
+
+def test_all_strings (max_length, alphabet, pda, base):
+    assert len(base) <= max_length
+    print (base, "is a palindrome:", pal_pda.simulate(base))
+    if (len(base) < max_length):
+        for a in alphabet:
+            if len(a) > 0:
+                test_all_strings(max_length, alphabet, pda, base+a)
+
+test_all_strings(5, ['a','b'], pal_pda, "")
+
 pal_cfg = pal_pda.to_CFG()
 pals = pal_cfg.generate_values(100)
 for p in pals:
