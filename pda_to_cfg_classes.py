@@ -1,9 +1,12 @@
 import queue
 import random
-
+import math
 
 def int_to_bin(x):
     return x.__format__('b')
+
+def bin_to_int(s):
+    return int(s, 2) # interpret s as an int in base 2
 
 def b_count(x):
     return int_to_bin(x).count('1')
@@ -11,19 +14,29 @@ def b_count(x):
 def is_k_flimsy(x, k):
     return b_count(x) > b_count(k*x)
 
+def reverse_string (s):
+    return s[::-1]
 
+def concat_string_array (A):
+    result = ''
+    for a in A:
+        result += a
+    return result
 
-
+def print_array (A):
+    for a in A:
+        print(a)
 
 
 
 class PDA:
     '''Pushdown Automata (accepting on empty stack only)'''
-    def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
+    def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions, accept_state):
         self.states = states
         self.alphabet = alphabet
         self.stack_alphabet = stack_alphabet
         self.start_state = start_state
+        self.accept_state = accept_state # The ONLY accepting state; stops reading and pops whole stack
         self.start_stack = start_stack # assume list of length 1
         self.transitions = transitions # here the top of the stack is on the RIGHT of the stack_after string
         # TODO: verify that there are no infinite epsilon loops
@@ -33,7 +46,7 @@ class PDA:
         cfg = CFG()
         cfg.init_variables(self)
         cfg.add_to_alphabet(self.alphabet)
-        cfg.set_start_variable((self.start_state, self.start_stack[0], 'END')) # TODO: Generalize this!
+        cfg.set_start_variable((self.start_state, self.start_stack[0], self.accept_state)) # TODO: Generalize this!
         cfg.init_productions()
         cfg.populate_productions(self)
         cfg.eliminate_useless_productions()
@@ -63,7 +76,9 @@ class PDA:
 
         return False
 
-
+    def output_gv (self):
+        # TODO: return valid output for .gv dot file
+        return ""
 
 
 
@@ -148,9 +163,11 @@ class CFG:
         while (len(stack) > 0):
             current = stack.pop()
             goes_to = self.productions[current]
-            for var in goes_to:
-                for i in range (1, len(var)):
-                    next = var[i]
+            for prod in goes_to:
+                for i in range (1, len(prod)): # TODO: How does this work? I don't remember
+                    next = prod[i]
+                    #if type(next) == list:
+                    #print(next)
                     if (not next in seen):
                         seen.add(next)
                         stack.append(next)
@@ -158,19 +175,18 @@ class CFG:
 
     # using DFS, return set of variables that can produce an all-terminal string
     def rfind_reachable_vars (self):
-        good = set()
+        good = set() # first, find the set of productions that have terminal-only outputs
         for v in self.productions.keys():
             for w in self.productions[v]:
-                if (len(w) < 2): # w has a production of just a terminal
-                    assert (len(w) == 1)
-                    if not (w[0] in self.alphabet):
-                        print("ERROR REACHED")
-                        print(w[0])
-                        print(w)
-                        print(self.alphabet)
-                        assert(False)
+                all_terminals = True
+                for x in w:
+                    if (x in self.variables):
+                        all_terminals = False
+                    else:
+                        assert (x in self.alphabet)
+                if (all_terminals):
                     good.add(v)
-                    print('\t\t', v)
+
         change = True    
         while (change): # Find variables that lead to such productions
             change = False
@@ -184,23 +200,18 @@ class CFG:
                         if flag:
                             good.add(v)
                             change = True
-                            print('\t\t\t', v)
+                            # print('\t\t\t', v)
         return good
 
 
     # Eliminate dead production rules
     def eliminate_useless_productions (self):
         flag = True
-        while (flag):
-            count = 0
-            for p in self.productions.values():
-                count += len(p)
-            print(len(self.variables), 'variables, and', count, 'production rules')
-            
-            print("DELETING...")
+        while (flag): # Now iterate through, removing all bad variables
             flag = False
             to_remove_from_V = set()
             to_remove_from_P = []
+
             reachable_vars = self.find_reachable_vars()
             produceable_vars = self.rfind_reachable_vars()
             for v in self.variables:
@@ -211,24 +222,47 @@ class CFG:
             for v in to_remove_from_V:
                 #print('\t', v)
                 self.variables.remove(v)
-                del self.productions[v]
-                for (left, right) in self.productions.items():
-                    for production in right:
+                self.productions.pop(v)
+                for prod_list in self.productions.values():
+                    for production in prod_list:
                         if (v in production):
-                            #print('\t\t', left, '\t', production)
-                            to_remove_from_P.append((right, production))
+                            to_remove_from_P.append((prod_list, production))
             
-            for (right, production) in to_remove_from_P:
-                if (production in right):
-                    right.remove(production)
+            for (prod_list, production) in to_remove_from_P:
+                if (production in prod_list):
+                    prod_list.remove(production)
 
 
+            # # remove all unnecessary empty strings
+            # # replace all variables with exactly one prod with that prod
+            # replaces = []
+            # for v in self.variables:
+            #     prod_list = self.productions[v]      # recall: the RHS is a list of production rules,
+            #     for prod in prod_list: # themselves lists of strings and vars
+            #         for item in prod:
+            #             if item == '' and len(prod) > 1: # empty string appears next to other vars and terminals
+            #                 prod.remove(item)
+            #     if len(prod_list) == 1:
+            #         replaces.append((v, prod_list[0]))
+            # for (v,u) in replaces:
+            #     for prod_list in self.productions.values():
+            #         for prod in prod_list:
+            #             for i in range(len(prod)):
+            #                 if prod[i] == v:
+            #                     prod[i] = u
+            #                     flag = True
 
 
-    # def generate_CFG_from_PDA (self, pda):
-    #     return CFG(pda)
+    # Count number of variables
+    def count_variables (self):
+        return len(self.variables)
 
-
+    # Count number of productions
+    def count_productions (self):
+        count = 0
+        for arr in self.productions.values():
+            count += len(arr)
+        return count 
 
     def generate_values (self, limit):
         q = queue.PriorityQueue()
@@ -293,15 +327,73 @@ class CFG:
         flimsy.sort()
         return flimsy
 
+    # Convert CFG to PDA
+    def to_PDA (self):
+        # TODO: Write this
+        return
+
+    # A helper function to make variable names "pretty" (i.e. V_i)
+    def _pretty_names_ (self):
+        nice_names = {self.start : "V_0"}
+        V = [self.start]
+        for v in self.variables:
+            if v != self.start:
+                nice_names[v] = "V_" + str(len(V))
+                V.append(v)
+        return (nice_names, V)
+
+    # Print CFG in "nice" form
+    def to_string_array (self):
+        (nice_names, V) = self._pretty_names_()
+        output = []
+        for i in range (len(V)):
+            s = nice_names[V[i]] + "\t->\t"
+            for p in self.productions[V[i]]:
+                for x in p:
+                    if x in self.alphabet:
+                        if x == "":
+                            s += "_"
+                        else:
+                            s += x
+                    else:
+                        assert x in self.variables
+                        s += nice_names[x]
+                s += " | "
+            output.append(s[:-3]) # remove the last three characters (should be an extra " | ")
+        return output
+
+    # Convert CFG to Maple code for analysis
+    def to_Maple (self):
+        (nice_names, V) = self._pretty_names_()
+        output = ["eqs := ["]
+        for i in range (len(V)):
+            s = '-' + nice_names[V[i]] + ' + '
+            for p in self.productions[V[i]]:
+                for x in p:
+                    if x in self.alphabet:
+                        if x == "":
+                            s += "1*"
+                        else:
+                            s += "x*"
+                    else:
+                        assert x in self.variables
+                        s += nice_names[x]+"*"
+                s = s[:-1] + " + " # remove the last '*'
+            output.append(s[:-3] + ",") # remove the last three characters (should be an extra " + ")
+        output[-1] = output[-1][:-1] # remove the last ','
+        output.append("];")
+        return output
 
 
 
 
-def create_palindrome_pda ():
-    states = {"S", "END"}
+
+def create_palindrome_PDA ():
+    states = {'S', 'END'}
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a','b'}
-    start_state = "S"
+    start_state = 'S'
+    final_state = 'END'
     start_stack = ['Z']
     delta = {
         ('S', 'a', 'Z'): [('S', 'Za'), ('END', 'Z')],
@@ -317,15 +409,34 @@ def create_palindrome_pda ():
         ('END', 'a', 'a'): [('END', '')],
         ('END', 'b', 'b'): [('END', '')]
     }
-    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta)
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
 
 
-def create_flimsy_PDA (k): # Only works for k=3 so far
-    assert (k == 3)
+def create_equal_as_bs_PDA ():
+    states = {'S', 'END'}
+    alphabet = {'', 'a', 'b'}
+    stack_alphabet = {'Z','a'}
+    start_state = 'S'
+    final_state = 'END'
+    start_stack = ['Z']
+    delta = {
+        ('S', '', 'Z'): [('END', '')],
+        ('S', 'a', 'Z'): [('S', 'Za')],
+        ('S', 'a', 'a'): [('S', 'aa')],
+        ('S', 'b', 'a'): [('END', '')],
+        ('END', '', 'Z'): [('END', '')],
+        ('END', 'b', 'a'): [('END', '')]
+    }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
+
+
+# Create a PDA to accept all 3-flimsy binary numbers
+def create_3flimsy_PDA ():
     states = {'-0', '-1', '-2', '+2', '+1', '+0', 'END'}
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
+    final_state = 'END'
     start_stack = ['Z']
     delta = {
         ('-0', '0', 'Z'): [('-0',  'Z')],
@@ -355,7 +466,107 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
         ('END', '', 'Z'): [('END', '')],
         ('END', '', 'X'): [('END', '')]
     }
-    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta)
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
+
+def create_3flimsy_PDA_alternate ():
+    states = {'-0', '-1', '-2', '+2', '+1', '+0', 'END_0', 'END_1'}
+    alphabet = {'0', '1', ''}
+    stack_alphabet = {'Z', 'X'}
+    start_state = '-0'
+    final_state = 'END_0'
+    start_stack = ['Z']
+    delta = {
+        ('-0', '0', 'Z'): [('-0',  'Z')],
+        ('-0', '0', 'X'): [('-0',  'X')],
+        ('-0', '1', 'Z'): [('-1',  'Z')],
+        ('-0', '1', 'X'): [('-1',  'X')],
+        ('-1', '0', 'Z'): [('-0', 'ZX')],
+        ('-1', '0', 'X'): [('-0', 'XX')],
+        ('-1', '1', 'Z'): [('+2',  'Z')],
+        ('-1', '1', 'X'): [('-2',   '')],
+        ('-2', '0', 'Z'): [('-1',  'Z')],
+        ('-2', '0', 'X'): [('-1',  'X')],
+        ('-2', '1', 'Z'): [('-2',  'Z')],
+        ('-2', '1', 'X'): [('-2',  'X')],
+        ('+2', '0', 'Z'): [('+1',  'Z')],
+        ('+2', '0', 'X'): [('+1',  'X')],
+        ('+2', '1', 'Z'): [('+2',  'Z')],
+        ('+2', '1', 'X'): [('+2',  'X'), ('END_1', 'X')],
+        ('+1', '0', 'Z'): [('-0',  'Z')],
+        ('+1', '0', 'X'): [('+0',   '')],
+        ('+1', '1', 'Z'): [('+2', 'ZX'), ('END_0', 'Z')],
+        ('+1', '1', 'X'): [('+2', 'XX'), ('END_0', 'X')],
+        ('+0', '0', 'Z'): [('+0',  'Z')],
+        ('+0', '0', 'X'): [('+0',  'X')],
+        ('+0', '1', 'Z'): [('+1',  'Z')],
+        ('+0', '1', 'X'): [('+1',  'X'), ('END_1', 'X')],
+        ('END_0', '', 'Z'): [('END_0', '')],
+        ('END_0', '', 'X'): [('END_0', '')],
+        ('END_1', '', 'X'): [('END_0', '')]
+    }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
+
+# Create a PDA to accept all k-flimsy binary numbers
+def create_flimsy_PDA (k): # Only works for k=3 so far
+    assert (type(k) == int) and (k > 1) and (k % 2 == 1)
+    states = {'END_0'}
+    alphabet = {'0', '1', ''}
+    stack_alphabet = {'Z', 'X'}
+    start_state = '-0'
+    final_state = 'END_0'
+    start_stack = ['Z']
+    delta = {('END_0', '', 'Z'): [('END_0', '')],
+             ('END_0', '', 'X'): [('END_0', '')]}
+
+    for carry in range (k):
+        s = str(carry)
+        states.add('-'+s)
+        states.add('+'+s)
+        for si in alphabet:
+            if si != '':
+                i = int(si)
+                for z in stack_alphabet:
+                    added = i*k + carry
+                    new_kn_digit = added % 2
+                    new_carry = str(added // 2)
+                    if (new_kn_digit % 2 == i):
+                        delta[('-'+s, si, z)] = [('-'+new_carry, z)]
+                        delta[('+'+s, si, z)] = [('+'+new_carry, z)]
+                    elif (new_kn_digit % 2 == 1):
+                        assert (i == 0) # n goes up by 0, kn goes up by 1
+                        delta[('-'+s, si, z)] = [('-'+new_carry, z+'X')]
+                        if (z == 'X'):
+                            delta[('+'+s, si, z)] = [('+'+new_carry, '')]
+                        else:
+                            delta[('+'+s, si, z)] = [('-'+new_carry, z)]
+                    else:
+                        assert (new_kn_digit % 2 == 0)
+                        assert (i == 1)  # n goes up by 1, kn goes up by 0
+                        delta[('+'+s, si, z)] = [('+'+new_carry, z+'X')]
+                        if (z == 'X'):
+                            delta[('-'+s, si, z)] = [('-'+new_carry, '')]
+                        else:
+                            delta[('-'+s, si, z)] = [('+'+new_carry, z)]
+
+    # Add new end states
+    # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
+    for i in range (int(math.log2(k))):
+        new_state = 'END_'+str(i+1)
+        states.add(new_state)
+        one_less = 'END_'+str(i)
+        delta[(new_state, '', 'X')] = [(one_less, '')]
+
+    # 1-transitions that pop nothing from final states to END_x for some x?
+    for carry in range (k):
+        current_state = '+'+str(carry)
+        required_pops = b_count(k+carry)-1
+        delta[(current_state, '1', 'X')].append(('END_'+str(required_pops), 'X'))
+        if required_pops == 0:
+            delta[(current_state, '1', 'Z')].append(('END_'+str(required_pops), 'Z'))
+
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
+
+
 
 
 def find_first_k_flimsies (k, limit): # Finds the k-flimsy integers in [1..limit]
@@ -368,9 +579,52 @@ def find_first_k_flimsies (k, limit): # Finds the k-flimsy integers in [1..limit
 
 
 
-# Make a PDA for 3-flimsy numbers
-pda = create_flimsy_PDA (3)
+'''
+k = 9
+test = create_flimsy_PDA (k)
+print(test.states)
+print(test.alphabet)
+print(test.stack_alphabet)
+print(test.start_state)
+print(test.start_stack)
+for (left,right) in test.transitions.items():
+    print(left, "->", right)
+test_cfg = test.to_CFG()
+print(test_cfg.variables)
+print(test_cfg.alphabet)
+print(test_cfg.start)
+print_array(test_cfg.to_string_array())
+gen = test_cfg.generate_values(10000)
+A = []
+for x in gen:
+    y = bin_to_int(reverse_string(concat_string_array(x)))
+    A.append(y)
+    assert (is_k_flimsy(y, k))
+A.sort()
 
+B = find_first_k_flimsies (k, 1000)
+
+for i in range (len(B)):
+    assert A[i] == B[i]
+'''
+
+
+for k in range (41, 80, 2):
+    cfg = create_flimsy_PDA(k).to_CFG()
+    print("For k =",k,"we have",cfg.count_variables(),"variables and",cfg.count_productions(),"productions.")
+
+
+# flimsy3_pda = create_3flimsy_PDA_alternate()
+# print("states:", flimsy3_pda.states == test.states)
+# print("alphabet:", flimsy3_pda.alphabet == test.alphabet)
+# print("stack_alphabet:", flimsy3_pda.stack_alphabet == test.stack_alphabet)
+# print("start_state:", flimsy3_pda.start_state == test.start_state)
+# print("start_stack:", flimsy3_pda.start_stack == test.start_stack)
+# for (left,right) in flimsy3_pda.transitions.items():
+#     if (test.transitions[left] != flimsy3_pda.transitions[left]):
+#         print (left, "->", right)
+
+'''
 # Turn it into a CFG
 cfg = pda.to_CFG()
 
@@ -378,13 +632,13 @@ print(cfg.variables, '\n')
 print(cfg.productions, '\n')
 print(cfg.start, '\n')
 print(cfg.alphabet)
+'''
 
 
 
 
-
-pal_pda = create_palindrome_pda()
-
+# pal_pda = create_palindrome_PDA()
+'''
 def test_all_strings (max_length, alphabet, pda, base):
     assert len(base) <= max_length
     print (base, "is a palindrome:", pal_pda.simulate(base))
@@ -394,17 +648,36 @@ def test_all_strings (max_length, alphabet, pda, base):
                 test_all_strings(max_length, alphabet, pda, base+a)
 
 test_all_strings(5, ['a','b'], pal_pda, "")
+'''
+# pal_cfg = pal_pda.to_CFG()
+# pals = pal_cfg.generate_values(100)
+# for p in pals:
+#     x = ''
+#     for a in p:
+#         x += a
+#     print(x)
+# for s in pal_cfg.to_string_array():
+#     print(s)
+# for s in pal_cfg.to_Maple():
+#     print(s)
 
-pal_cfg = pal_pda.to_CFG()
-pals = pal_cfg.generate_values(100)
-for p in pals:
-    x = ''
-    for a in p:
-        x += a
-    print(x)
 
 
 
+# equal_cfg = create_equal_as_bs_PDA().to_CFG()
+# equal_as_bs = equal_cfg.generate_values(100)
+# for w in equal_as_bs:
+#     s = ''
+#     for a in w:
+#         s += a
+#     print(s)
+# for s in equal_cfg.to_string_array():
+#     print(s)
+# for s in equal_cfg.to_Maple():
+#     print(s)
+
+
+'''
 cfg_output = cfg.generate_flimsy_values(100000)
 assert(len(cfg_output) > 10000)
 
@@ -415,6 +688,7 @@ for i in range (len(correct_output)):
         print (i, "\t", cfg_output[i], "!=", correct_output[i])
         break
 print("DONE")
+'''
 
 '''
 f = open("new_flimsy_CFG_generated.txt", 'w')
