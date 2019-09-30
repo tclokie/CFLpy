@@ -1,6 +1,7 @@
 import queue
 import random
 import math
+import sys
 
 def int_to_bin(x):
     return x.__format__('b')
@@ -163,12 +164,14 @@ class CFG:
         while (len(stack) > 0):
             current = stack.pop()
             goes_to = self.productions[current]
-            for prod in goes_to:
-                for i in range (1, len(prod)): # TODO: How does this work? I don't remember
-                    next = prod[i]
-                    #if type(next) == list:
-                    #print(next)
-                    if (not next in seen):
+            for prod_list in goes_to:
+                for i in range (1, len(prod_list)): # TODO: How does this work? I don't remember
+                    next = prod_list[i]
+                    # if type(next) == list:
+                    #     print(next)
+                    #     print(prod_list[i])
+                    #     print(prod_list)
+                    if (next in self.variables) and (not next in seen):
                         seen.add(next)
                         stack.append(next)
         return seen
@@ -216,41 +219,61 @@ class CFG:
             produceable_vars = self.rfind_reachable_vars()
             for v in self.variables:
                 if (len(self.productions[v]) == 0 or (not v in reachable_vars) or (not v in produceable_vars)):
-                    flag = True
                     to_remove_from_V.add(v)
-            
+                    flag = True
+
+            # remove useless variables,
             for v in to_remove_from_V:
-                #print('\t', v)
                 self.variables.remove(v)
                 self.productions.pop(v)
                 for prod_list in self.productions.values():
                     for production in prod_list:
                         if (v in production):
                             to_remove_from_P.append((prod_list, production))
-            
+            # remove useless productions           
             for (prod_list, production) in to_remove_from_P:
                 if (production in prod_list):
                     prod_list.remove(production)
 
+            del to_remove_from_V
+            del to_remove_from_P
 
-            # # remove all unnecessary empty strings
-            # # replace all variables with exactly one prod with that prod
-            # replaces = []
-            # for v in self.variables:
-            #     prod_list = self.productions[v]      # recall: the RHS is a list of production rules,
-            #     for prod in prod_list: # themselves lists of strings and vars
-            #         for item in prod:
-            #             if item == '' and len(prod) > 1: # empty string appears next to other vars and terminals
-            #                 prod.remove(item)
-            #     if len(prod_list) == 1:
-            #         replaces.append((v, prod_list[0]))
-            # for (v,u) in replaces:
-            #     for prod_list in self.productions.values():
-            #         for prod in prod_list:
-            #             for i in range(len(prod)):
-            #                 if prod[i] == v:
-            #                     prod[i] = u
-            #                     flag = True
+            vars_to_replace = {}
+
+            # now we simplify variables with exactly one production
+            for v in self.variables:
+                if len(self.productions[v]) == 1: # replace instances of v with P[v]
+                    vars_to_replace[v] = self.productions[v][0]
+                    flag = True
+            for prod_list in self.productions.values():
+                for production in prod_list:
+                    for index in range(len(production)):
+                        if production[index] in vars_to_replace:
+                            replacements = vars_to_replace[production[index]]
+                            production.pop(index)
+                            i = index
+                            for s in replacements:
+                                production.insert(i, s)
+                                i += 1
+
+            for v in vars_to_replace:
+                self.variables.remove(v)
+            # TODO: check that this is safe?
+
+
+            # now we remove empty strings from non-empty productions; combine multiple empties into one
+            for prod_list in self.productions.values():
+                for production in prod_list:
+                    empty_indices = []
+                    for i in range (len(production)):
+                        if production[i] == '':
+                            empty_indices.insert(0,i) # prepend
+                    for i in empty_indices:
+                        production.pop(i)
+                    if len(production) == 0:
+                        production.append('')
+
+
 
 
     # Count number of variables
@@ -358,7 +381,8 @@ class CFG:
                     else:
                         assert x in self.variables
                         s += nice_names[x]
-                s += " | "
+                    s += ' '
+                s += "| "
             output.append(s[:-3]) # remove the last three characters (should be an extra " | ")
         return output
 
@@ -579,8 +603,23 @@ def find_first_k_flimsies (k, limit): # Finds the k-flimsy integers in [1..limit
 
 
 
+
+if (len(sys.argv) > 1):
+    sk = sys.argv[1]
+    k = int(sk)
+    fname = sk+"_cfg.maple"
+
+    pda = create_flimsy_PDA(k)
+    cfg = pda.to_CFG()
+    output = cfg.to_Maple() # String array
+
+    f = open(fname, 'w')
+    for line in output:
+        f.write(line + '\n')
+    f.close()
+
 '''
-k = 9
+k = 3
 test = create_flimsy_PDA (k)
 print(test.states)
 print(test.alphabet)
@@ -608,10 +647,9 @@ for i in range (len(B)):
     assert A[i] == B[i]
 '''
 
-
-for k in range (41, 80, 2):
-    cfg = create_flimsy_PDA(k).to_CFG()
-    print("For k =",k,"we have",cfg.count_variables(),"variables and",cfg.count_productions(),"productions.")
+# for k in range (41, 90, 2):
+#     cfg = create_flimsy_PDA(k).to_CFG()
+#     print("For k =",k,"we have",cfg.count_variables(),"variables and",cfg.count_productions(),"productions.")
 
 
 # flimsy3_pda = create_3flimsy_PDA_alternate()
@@ -635,9 +673,6 @@ print(cfg.alphabet)
 '''
 
 
-
-
-# pal_pda = create_palindrome_PDA()
 '''
 def test_all_strings (max_length, alphabet, pda, base):
     assert len(base) <= max_length
@@ -649,33 +684,35 @@ def test_all_strings (max_length, alphabet, pda, base):
 
 test_all_strings(5, ['a','b'], pal_pda, "")
 '''
-# pal_cfg = pal_pda.to_CFG()
-# pals = pal_cfg.generate_values(100)
-# for p in pals:
-#     x = ''
-#     for a in p:
-#         x += a
-#     print(x)
-# for s in pal_cfg.to_string_array():
-#     print(s)
-# for s in pal_cfg.to_Maple():
-#     print(s)
+'''
+pal_pda = create_palindrome_PDA()
+pal_cfg = pal_pda.to_CFG()
+pals = pal_cfg.generate_values(50)
+for p in pals:
+    x = ''
+    for a in p:
+        x += a
+    print(x)
+for s in pal_cfg.to_string_array():
+    print(s)
+for s in pal_cfg.to_Maple():
+    print(s)
+'''
 
 
-
-
-# equal_cfg = create_equal_as_bs_PDA().to_CFG()
-# equal_as_bs = equal_cfg.generate_values(100)
-# for w in equal_as_bs:
-#     s = ''
-#     for a in w:
-#         s += a
-#     print(s)
-# for s in equal_cfg.to_string_array():
-#     print(s)
-# for s in equal_cfg.to_Maple():
-#     print(s)
-
+'''
+equal_cfg = create_equal_as_bs_PDA().to_CFG()
+equal_as_bs = equal_cfg.generate_values(50)
+for w in equal_as_bs:
+    s = ''
+    for a in w:
+        s += a
+    print(s)
+for s in equal_cfg.to_string_array():
+    print(s)
+for s in equal_cfg.to_Maple():
+    print(s)
+'''
 
 '''
 cfg_output = cfg.generate_flimsy_values(100000)
