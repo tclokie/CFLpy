@@ -453,6 +453,20 @@ def create_equal_as_bs_PDA ():
     }
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
 
+def create_dyck_PDA (): # TODO: Test this
+    states = {'S', 'END'}
+    alphabet = {'', '(', ')'}
+    stack_alphabet = {'Z', '('}
+    start_state = 'S'
+    final_state = 'END'
+    start_stack = ['Z']
+    delta = {
+        ('S', '(', 'Z'): [('S', 'Z(')],
+        ('S', '(', '('): [('S', '((')],
+        ('S', ')', '('): [('S', '')],
+        ('S', '', 'Z'): [('END', '')]
+    }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta, final_state)
 
 # Create a PDA to accept all 3-flimsy binary numbers
 def create_3flimsy_PDA ():
@@ -604,10 +618,9 @@ def find_first_k_flimsies (k, limit): # Finds the k-flimsy integers in [1..limit
 
 
 
-if (len(sys.argv) > 1):
-    sk = sys.argv[1]
-    k = int(sk)
-    fname = sk+"_cfg.maple"
+if (len(sys.argv) > 1) and (sys.argv):
+    k = int(sys.argv[1])
+    fname = "./maple_files/" + ("{:02d}".format(k)) + "_cfg.maple"
 
     pda = create_flimsy_PDA(k)
     cfg = pda.to_CFG()
