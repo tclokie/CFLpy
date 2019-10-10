@@ -30,6 +30,8 @@ def print_array (A):
 
 
 
+
+
 class PDA:
     '''Pushdown Automata (accepting on empty stack only)'''
     def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions, accept_state):
@@ -406,7 +408,36 @@ class CFG:
             output.append(s[:-3] + ",") # remove the last three characters (should be an extra " + ")
         output[-1] = output[-1][:-1] # remove the last ','
         output.append("];")
+
+        s = "Groebner[Basis](eqs, lexdeg(["
+        for i in range (1, len(V)):
+            s += nice_names[V[i]] + ", "
+        if (len(V) > 1):
+            s = s[:-2] + "], [" # Remove the last ", "
+        s += nice_names[V[0]] + "]));"
+        output.append(s)
+
+        output.append("algeq := %[1];")
+        output.append("map(series, [solve(algeq, "+nice_names[self.start]+")], x);")
+        output.append("f := solve(algeq, "+nice_names[self.start]+");")
+        output.append("ps := f[1];")
+        output.append("series(ps, x, 40);")
+
         return output
+
+'''
+eqs:=[];
+Groebner[Basis](eqs, lexdeg([V_A, V_B, V_C, V_D, V_E, V_F, V_G, V_H,
+V_I, V_J, V_K, V_L, V_M, V_N], [S]));
+algeq := %[1];
+map(series, [solve(algeq, S)], x);
+f := solve(algeq,S);
+ps := f[1];
+series(ps, x, 40);
+libname:="<insert library name>",libname:
+combine(equivalent(ps,x,n,5));
+'''
+
 
 
 
