@@ -28,6 +28,12 @@ def print_array (A):
     for a in A:
         print(a)
 
+def print_array_to_file (A, filename):
+    f = open(filename, 'w')
+    for line in A:
+        f.write(line + '\n')
+    f.close()
+
 
 def find_first_k_flimsies (k, limit): # Finds the k-flimsy integers in [1..limit]
     output = []
@@ -74,7 +80,7 @@ class PDA:
             if (key in self.transitions):
                 next_steps = self.transitions[key]
                 for (new_state, new_stack) in next_steps:
-                    if self._simulate_(new_state, current_stack[0:-1]+new_stack, x[1:]):
+                    if self._simulate_(new_state, current_stack[:-1]+new_stack, x[1:]):
                         return True
 
         key = (current_state, '', current_stack[-1])
@@ -201,7 +207,7 @@ class CFG:
             for a in pda.alphabet:
                 for A in pda.stack_alphabet:
                     if ((q, a, A) in pda.transitions):
-                        for (q_1, B) in pda.transitions[(q, a, A)]: # Generalize this part!
+                        for (q_1, B) in pda.transitions[(q, a, A)]: # Generalize this part?
                             m = len(B)
                             if (m == 0):
                                 self.productions[(q, A, q_1)].append([a])
@@ -295,7 +301,11 @@ class CFG:
         # now we simplify variables with exactly one production
         for v in self.variables:
             if len(self.productions[v]) == 1: # replace instances of v with P[v]
-                vars_to_replace[v] = self.productions[v][0]
+                if (v != self.start):
+                    vars_to_replace[v] = self.productions[v][0]
+                elif len(self.productions[v][0]) == 1 and self.productions[v][0][0] in self.variables:
+                    vars_to_replace[self.productions[v][0][0]] = v
+                    self.productions[v] = self.productions[self.productions[v][0][0]]
         for prod_list in self.productions.values():
             for production in prod_list:
                 for index in range(len(production)):
@@ -338,6 +348,7 @@ class CFG:
             count += len(arr)
         return count 
 
+    # Generate $limit values to test; using leftmost derivations only
     def generate_values (self, limit):
         q = queue.PriorityQueue()
         q.put((1,[self.start]))
@@ -356,13 +367,14 @@ class CFG:
                         q.put(new_tuple)
                 else:
                     assert part in self.alphabet
+
                 i += 1
 
             if (not contains_var):
                 output.append(next)
         return output
 
-    # Generate some values to test; using leftmost derivations only
+    # Generate some values to test; using leftmost derivations only; assuming flimsy CFG
     def generate_flimsy_values (self, limit):
         q = queue.PriorityQueue()
         q.put((1,[self.start]))
@@ -556,7 +568,7 @@ def create_Jeffs_even_palindrome_PDA():
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
 
 
-def create_equal_as_bs_PDA ():
+def create_an_bn_PDA ():
     states = {'S', 'END'}
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a'}
@@ -569,6 +581,23 @@ def create_equal_as_bs_PDA ():
         ('S', 'b', 'a'): [('END', '')],
         ('END', '', 'Z'): [('END', '')],
         ('END', 'b', 'a'): [('END', '')]
+    }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta)
+
+def create_equal_as_bs_PDA ():
+    states = {'S', 'END'}
+    alphabet = {'', 'a', 'b'}
+    stack_alphabet = {'Z','a', 'b'}
+    start_state = 'S'
+    start_stack = ['Z']
+    delta = {
+        ('S', '', 'Z'): [('END', '')],
+        ('S', 'a', 'Z'): [('S', 'Za')],
+        ('S', 'a', 'a'): [('S', 'aa')],
+        ('S', 'a', 'b'): [('S', '')],
+        ('S', 'b', 'Z'): [('S', 'Zb')],
+        ('S', 'b', 'a'): [('S', '')],
+        ('S', 'b', 'b'): [('S', 'bb')]
     }
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta)
 
@@ -896,16 +925,23 @@ def create_k_equal_PDA (k): # Only works for k=3 so far
 if (len(sys.argv) > 1) and (sys.argv):
     k = int(sys.argv[1])
     # fname = "./maple_files/" + ("{:02d}".format(k)) + "_cfg.maple"
-    fname = "./maple_files/" + ("{:02d}".format(k)) + "_equal.maple"
+    fname = "./maple_files/" + ("{:02d}".format(k)) + "_flimsy.maple"
 
-    # pda = create_flimsy_PDA(k)
-    pda = create_k_equal_PDA(k)
+    pda = create_flimsy_PDA(k)
+    # pda = create_k_equal_PDA(k)
     # print_array(pda.to_string_array())
     cfg = pda.to_CFG()
     # print_array(cfg.to_string_array())
     output = cfg.to_Maple() # String array
-
-    f = open(fname, 'w')
-    for line in output:
-        f.write(line + '\n')
-    f.close()
+    print_array_to_file(output, fname)
+else:
+    pda = create_dyck_PDA()
+    cfg = pda.to_CFG()
+    print_array_to_file(cfg.to_Maple(),'./maple_files/dyck.maple')
+    pda = create_palindrome_PDA()
+    cfg = pda.to_CFG()
+    print_array_to_file(cfg.to_Maple(),'./maple_files/palindromes.maple')
+    pda = create_equal_as_bs_PDA()
+    cfg = pda.to_CFG()
+    print_array_to_file(cfg.to_Maple(),'./maple_files/equal.maple')
+    
