@@ -1,5 +1,3 @@
-
-
 EMPTY_STRING = ''
 
 # TODO: reverse stack direction
@@ -28,7 +26,6 @@ class PDA:
         return cfg
 
     # Simulates PDA on an input x; determines whether or not PDA accepts
-    # TODO: Doesn't work?
     def simulate (self, x): # boolean: does this PDA accept input x?
         return self._simulate_(self.start_state, self.start_stack, x)
 
@@ -48,10 +45,16 @@ class PDA:
         if (key in self.transitions):
             next_epsilon_steps = self.transitions[key]
             for (new_state, new_stack) in next_epsilon_steps:
-                if self._simulate_(new_state, current_stack[0:-1]+new_stack, x):
+                if self._simulate_(new_state, current_stack[:-1]+new_stack, x):
                     return True
 
         return False
+
+    def simplify (self):
+        # remove unreachable states
+        # remove unproductive states
+        # verify that there are no infinite epsilon loops?
+        return
 
     def to_string_array (self):
         output = []
@@ -67,12 +70,6 @@ class PDA:
         temp.sort()
         output.extend(temp)
         return output
-
-    def simplify (self):
-        # remove unreachable states
-        # remove unproductive states
-        # verify that there are no infinite epsilon loops?
-        return
 
     '''Outputs PDA as a .gv file, to be printed by dot'''
     def output_gv (self):
@@ -107,8 +104,3 @@ class PDA:
 
         output.append('}')
         return output
-
-
-
-
-

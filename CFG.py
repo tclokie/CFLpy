@@ -4,6 +4,14 @@ import random # TODO: just import random.random
 
 EMPTY_STRING = ''
 
+def concat_string_array (A):
+    result = ''
+    for a in A:
+        result += a
+    return result
+
+
+
 class CFG:
     '''Context-Free Grammar'''
     # Default constructor; creates empty CFG
@@ -47,7 +55,7 @@ class CFG:
     def populate_productions (self, pda):
         for q in pda.states:
             # Productions for the start variable
-            self.productions[self.start].append([(pda.start_state, pda.start_stack[0], q)])
+            self.productions[self.start].append([(pda.start_state, pda.start_stack, q)])
 
             # Productions for the triple variables
             for a in pda.alphabet:
@@ -55,13 +63,13 @@ class CFG:
                     if ((q, a, A) in pda.transitions):
                         for (q_1, B) in pda.transitions[(q, a, A)]: # Generalize this part?
                             m = len(B)
-                            if (m == 0):
+                            if (m == 0): # pop top of stack
                                 self.productions[(q, A, q_1)].append([a])
                             elif (m == 1):
                                 B_1 = B[0]
                                 for q_2 in pda.states:
                                     self.productions[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
-                            else:
+                            else: # push onto stack
                                 assert (m == 2) # Sanity check
                                 B_1 = B[1]
                                 B_2 = B[0]
@@ -217,7 +225,7 @@ class CFG:
                 i += 1
 
             if (not contains_var):
-                output.append(next)
+                output.append(concat_string_array(next))
         return output
 
     # # Generate some values to test; using leftmost derivations only; assuming flimsy CFG
@@ -340,5 +348,3 @@ class CFG:
         output.append("combine(equivalent(ps, x, n, 5));")
 
         return output
-
-

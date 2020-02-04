@@ -49,7 +49,7 @@ def create_palindrome_PDA ():
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a','b'}
     start_state = 'S'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('S', 'a', 'Z'): [('S', 'Za'), ('END', 'Z')],
         ('S', 'a', 'a'): [('S', 'aa'), ('END', 'a')],
@@ -71,7 +71,7 @@ def create_even_palindrome_PDA ():
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a','b'}
     start_state = 'S'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('S', 'a', 'Z'): [('S', 'Za')],
         ('S', 'a', 'a'): [('S', 'aa')],
@@ -93,7 +93,7 @@ def create_Jeffs_even_palindrome_PDA():
     alphabet = {'a', 'b', ''}
     stack_alphabet = {'Z', 'a', 'b'}
     start_state = 'q_0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     transitions = {
         ('q_0', 'a', 'Z'): [('q_0', 'Za')],
         ('q_0', 'a', 'a'): [('q_0', 'aa')],
@@ -116,7 +116,7 @@ def create_an_bn_PDA ():
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a'}
     start_state = 'S'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('S', '', 'Z'): [('END', '')],
         ('S', 'a', 'Z'): [('S', 'Za')],
@@ -132,7 +132,7 @@ def create_equal_as_bs_PDA ():
     alphabet = {'', 'a', 'b'}
     stack_alphabet = {'Z','a', 'b'}
     start_state = 'S'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('S', '', 'Z'): [('END', '')],
         ('S', 'a', 'Z'): [('S', 'Za')],
@@ -149,7 +149,7 @@ def create_dyck_PDA (): # TODO: Test this
     alphabet = {'', '(', ')'}
     stack_alphabet = {'Z', '('}
     start_state = 'S'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('S', '(', 'Z'): [('S', 'Z(')],
         ('S', '(', '('): [('S', '((')],
@@ -164,7 +164,7 @@ def create_3flimsy_PDA ():
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('-0', '0', 'Z'): [('-0',  'Z')],
         ('-0', '0', 'X'): [('-0',  'X')],
@@ -200,7 +200,7 @@ def create_3flimsy_PDA_alternate ():
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('-0', '0', 'Z'): [('-0',  'Z')],
         ('-0', '0', 'X'): [('-0',  'X')],
@@ -237,7 +237,7 @@ def create_3equal_PDA ():
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('-0', '0', 'Z'): [('-0',  'Z')],
         ('-0', '0', 'X'): [('-0',  'X')],
@@ -271,7 +271,7 @@ def create_5equal_PDA ():
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {
         ('+0', '0', 'X'): [('+0', 'X')],
         ('+0', '0', 'Z'): [('+0', 'Z')],
@@ -328,7 +328,7 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {('END_0', '', 'Z'): [('END_0', '')],
              ('END_0', '', 'X'): [('END_0', '')]}
 
@@ -387,7 +387,7 @@ def create_k_equal_PDA (k): # Only works for k=3 so far
     alphabet = {'0', '1', ''}
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
-    start_stack = ['Z']
+    start_stack = 'Z'
     delta = {('END_0', '', 'Z'): [('END_0', '')]}
 
     for carry in range (k):
@@ -479,20 +479,15 @@ if (len(sys.argv) > 1) and (sys.argv):
     print_array_to_file(output, fname)
 else:
     pda = create_dyck_PDA()
-    print_array(pda.to_string_array())
+    # print_array(pda.to_string_array())
     cfg = pda.to_CFG()
-    print_array(cfg.to_string_array())
-    print_array(cfg.to_Maple())
-    # pda = create_k_equal_PDA(3)
-    # print_array_to_file(pda.output_gv(), './3_equal.gv')
-    # cfg = pda.to_CFG()
-    # print_array_to_file(cfg.to_string_array(), './3_equal.cfg')
-    # print_array_to_file(cfg.to_Maple(),'./3_equal.maple')
+    # print_array(cfg.to_string_array())
+    # print_array(cfg.to_Maple())
+    print_array(cfg.generate_values(100))
     
     # pda = create_k_equal_PDA(5)
     # print_array_to_file(pda.output_gv(), './5_equal.gv')
     # cfg = pda.to_CFG()
     # print_array_to_file(cfg.to_string_array(), './5_equal.cfg')
     # print_array_to_file(cfg.to_Maple(),'./5_equal.maple')
-
 
