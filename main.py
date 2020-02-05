@@ -467,27 +467,9 @@ def create_k_equal_PDA (k): # Only works for k=3 so far
 
 if (len(sys.argv) > 1) and (sys.argv):
     k = int(sys.argv[1])
-    fname = "./maple_files/" + ("{:02d}".format(k)) + "_flimsy.maple"
 
     pda = create_flimsy_PDA(k)
-    # pda = create_k_equal_PDA(k)
-    # print_array(pda.to_string_array())
-    print_array_to_file(pda.output_gv(), './05_flimsy.gv')
+    print_array_to_file(pda.output_gv(), ('{:02d}'.format(k))+'-flimsy.gv')
     cfg = pda.to_CFG()
-    print_array(cfg.to_string_array())
-    output = cfg.to_Maple() # String array
-    print_array_to_file(output, fname)
-else:
-    pda = create_k_equal_PDA(3)
-    # print_array(pda.to_string_array())
-    cfg = pda.to_CFG()
-    # print_array(cfg.to_string_array())
-    # print_array(cfg.to_Maple())
-    print_array(cfg.generate_values(20))
-    
-    # pda = create_k_equal_PDA(5)
-    # print_array_to_file(pda.output_gv(), './5_equal.gv')
-    # cfg = pda.to_CFG()
-    # print_array_to_file(cfg.to_string_array(), './5_equal.cfg')
-    # print_array_to_file(cfg.to_Maple(),'./5_equal.maple')
+    print_array_to_file(cfg.to_Maple(),  ('{:02d}'.format(k))+'-flimsy.maple')
 

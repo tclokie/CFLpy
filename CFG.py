@@ -31,8 +31,6 @@ class CFG:
                 for p in pda.states:
                     self.variables.add((q, A, p))
 
-        # self.start = 'S'
-
     # Create alphabet
     def add_to_alphabet (self, a): # a can be a string, a set (of strings), or a list/array (of strings)
         if type(a) == str:

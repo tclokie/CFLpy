@@ -9,7 +9,6 @@ class PDA:
         self.start_state = start_state
         self.start_stack = start_stack # assume string of length 1
         self.transitions = transitions # here the top of the stack is on the RIGHT of the stack_after string
-        # TODO: verify that there are no infinite epsilon loops
         # TODO: eliminate unreachable/useless states, symbols, and transitions
         # TODO: make type/length assertions
 
@@ -29,6 +28,7 @@ class PDA:
         return self._simulate_(self.start_state, self.start_stack, x)
 
     def _simulate_ (self, current_state, current_stack, x): # takes current stack as string with top as right
+        # TODO: handle infinite epsilon loops
         if current_stack == EMPTY_STRING:
             return (len(x) == 0)
 
@@ -50,9 +50,10 @@ class PDA:
         return False
 
     def simplify (self):
-        # remove unreachable states
-        # remove unproductive states
-        # verify that there are no infinite epsilon loops?
+        # TODO: remove unreachable states
+        # TODO: remove unproductive states
+        # TODO: remove transitions to/from removed states
+        # TODO: simplify alphabet, stack_alphabet
         return
 
     def to_string_array (self):
