@@ -1,6 +1,5 @@
 EMPTY_STRING = ''
 
-# TODO: reverse stack direction
 class PDA:
     '''Pushdown Automata (accepting on empty stack only)'''
     def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
@@ -34,18 +33,18 @@ class PDA:
             return (len(x) == 0)
 
         if (len(x) > 0):
-            key = (current_state, x[0], current_stack[-1])
+            key = (current_state, x[0], current_stack[0])
             if (key in self.transitions):
                 next_steps = self.transitions[key]
                 for (new_state, new_stack) in next_steps:
-                    if self._simulate_(new_state, current_stack[:-1]+new_stack, x[1:]):
+                    if self._simulate_(new_state, new_stack+current_stack[1:], x[1:]):
                         return True
 
-        key = (current_state, EMPTY_STRING, current_stack[-1])
+        key = (current_state, EMPTY_STRING, current_stack[0])
         if (key in self.transitions):
             next_epsilon_steps = self.transitions[key]
             for (new_state, new_stack) in next_epsilon_steps:
-                if self._simulate_(new_state, current_stack[:-1]+new_stack, x):
+                if self._simulate_(new_state, new_stack+current_stack[1:], x):
                     return True
 
         return False

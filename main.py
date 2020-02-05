@@ -51,11 +51,11 @@ def create_palindrome_PDA ():
     start_state = 'S'
     start_stack = 'Z'
     delta = {
-        ('S', 'a', 'Z'): [('S', 'Za'), ('END', 'Z')],
+        ('S', 'a', 'Z'): [('S', 'aZ'), ('END', 'Z')],
         ('S', 'a', 'a'): [('S', 'aa'), ('END', 'a')],
-        ('S', 'a', 'b'): [('S', 'ba'), ('END', 'b')],
-        ('S', 'b', 'Z'): [('S', 'Zb'), ('END', 'Z')],
-        ('S', 'b', 'a'): [('S', 'ab'), ('END', 'a')],
+        ('S', 'a', 'b'): [('S', 'ab'), ('END', 'b')],
+        ('S', 'b', 'Z'): [('S', 'bZ'), ('END', 'Z')],
+        ('S', 'b', 'a'): [('S', 'ba'), ('END', 'a')],
         ('S', 'b', 'b'): [('S', 'bb'), ('END', 'b')],
         ('S', '', 'Z'): [('END', 'Z')],
         ('S', '', 'a'): [('END', 'a')],
@@ -73,11 +73,11 @@ def create_even_palindrome_PDA ():
     start_state = 'S'
     start_stack = 'Z'
     delta = {
-        ('S', 'a', 'Z'): [('S', 'Za')],
+        ('S', 'a', 'Z'): [('S', 'aZ')],
         ('S', 'a', 'a'): [('S', 'aa')],
-        ('S', 'a', 'b'): [('S', 'ba')],
-        ('S', 'b', 'Z'): [('S', 'Zb')],
-        ('S', 'b', 'a'): [('S', 'ab')],
+        ('S', 'a', 'b'): [('S', 'ab')],
+        ('S', 'b', 'Z'): [('S', 'bZ')],
+        ('S', 'b', 'a'): [('S', 'ba')],
         ('S', 'b', 'b'): [('S', 'bb')],
         ('S', '', 'Z'): [('END', 'Z')],
         ('S', '', 'a'): [('END', 'a')],
@@ -88,18 +88,18 @@ def create_even_palindrome_PDA ():
     }
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, delta)
 
-def create_Jeffs_even_palindrome_PDA():
+def create_even_palindrome_PDA_alternate():
     states = {'q_0', 'q_1', 'q_2'}
     alphabet = {'a', 'b', ''}
     stack_alphabet = {'Z', 'a', 'b'}
     start_state = 'q_0'
     start_stack = 'Z'
     transitions = {
-        ('q_0', 'a', 'Z'): [('q_0', 'Za')],
+        ('q_0', 'a', 'Z'): [('q_0', 'aZ')],
         ('q_0', 'a', 'a'): [('q_0', 'aa')],
-        ('q_0', 'a', 'b'): [('q_0', 'ba')],
-        ('q_0', 'b', 'Z'): [('q_0', 'Zb')],
-        ('q_0', 'b', 'a'): [('q_0', 'ab')],
+        ('q_0', 'a', 'b'): [('q_0', 'ab')],
+        ('q_0', 'b', 'Z'): [('q_0', 'bZ')],
+        ('q_0', 'b', 'a'): [('q_0', 'ba')],
         ('q_0', 'b', 'b'): [('q_0', 'bb')],
         ('q_0',  '', 'Z'): [('q_1', 'Z')],
         ('q_0',  '', 'a'): [('q_1', 'a')],
@@ -119,7 +119,7 @@ def create_an_bn_PDA ():
     start_stack = 'Z'
     delta = {
         ('S', '', 'Z'): [('END', '')],
-        ('S', 'a', 'Z'): [('S', 'Za')],
+        ('S', 'a', 'Z'): [('S', 'aZ')],
         ('S', 'a', 'a'): [('S', 'aa')],
         ('S', 'b', 'a'): [('END', '')],
         ('END', '', 'Z'): [('END', '')],
@@ -135,10 +135,10 @@ def create_equal_as_bs_PDA ():
     start_stack = 'Z'
     delta = {
         ('S', '', 'Z'): [('END', '')],
-        ('S', 'a', 'Z'): [('S', 'Za')],
+        ('S', 'a', 'Z'): [('S', 'aZ')],
         ('S', 'a', 'a'): [('S', 'aa')],
         ('S', 'a', 'b'): [('S', '')],
-        ('S', 'b', 'Z'): [('S', 'Zb')],
+        ('S', 'b', 'Z'): [('S', 'bZ')],
         ('S', 'b', 'a'): [('S', '')],
         ('S', 'b', 'b'): [('S', 'bb')]
     }
@@ -151,7 +151,7 @@ def create_dyck_PDA (): # TODO: Test this
     start_state = 'S'
     start_stack = 'Z'
     delta = {
-        ('S', '(', 'Z'): [('S', 'Z(')],
+        ('S', '(', 'Z'): [('S', '(Z')],
         ('S', '(', '('): [('S', '((')],
         ('S', ')', '('): [('S', '')],
         ('S', '', 'Z'): [('END', '')]
@@ -170,7 +170,7 @@ def create_3flimsy_PDA ():
         ('-0', '0', 'X'): [('-0',  'X')],
         ('-0', '1', 'Z'): [('-1',  'Z')],
         ('-0', '1', 'X'): [('-1',  'X')],
-        ('-1', '0', 'Z'): [('-0', 'ZX')],
+        ('-1', '0', 'Z'): [('-0', 'XZ')],
         ('-1', '0', 'X'): [('-0', 'XX')],
         ('-1', '1', 'Z'): [('+2',  'Z')],
         ('-1', '1', 'X'): [('-2',   '')],
@@ -184,7 +184,7 @@ def create_3flimsy_PDA ():
         ('+2', '1', 'X'): [('+2',  'X'), ('END', '')],
         ('+1', '0', 'Z'): [('-0',  'Z')],
         ('+1', '0', 'X'): [('+0',   '')],
-        ('+1', '1', 'Z'): [('+2', 'ZX'), ('END', '')],
+        ('+1', '1', 'Z'): [('+2', 'XZ'), ('END', '')],
         ('+1', '1', 'X'): [('+2', 'XX'), ('END', '')],
         ('+0', '0', 'Z'): [('+0',  'Z')],
         ('+0', '0', 'X'): [('+0',  'X')],
@@ -206,7 +206,7 @@ def create_3flimsy_PDA_alternate ():
         ('-0', '0', 'X'): [('-0',  'X')],
         ('-0', '1', 'Z'): [('-1',  'Z')],
         ('-0', '1', 'X'): [('-1',  'X')],
-        ('-1', '0', 'Z'): [('-0', 'ZX')],
+        ('-1', '0', 'Z'): [('-0', 'XZ')],
         ('-1', '0', 'X'): [('-0', 'XX')],
         ('-1', '1', 'Z'): [('+2',  'Z')],
         ('-1', '1', 'X'): [('-2',   '')],
@@ -220,7 +220,7 @@ def create_3flimsy_PDA_alternate ():
         ('+2', '1', 'X'): [('+2',  'X'), ('END_1', 'X')],
         ('+1', '0', 'Z'): [('-0',  'Z')],
         ('+1', '0', 'X'): [('+0',   '')],
-        ('+1', '1', 'Z'): [('+2', 'ZX'), ('END_0', 'Z')],
+        ('+1', '1', 'Z'): [('+2', 'XZ'), ('END_0', 'Z')],
         ('+1', '1', 'X'): [('+2', 'XX'), ('END_0', 'X')],
         ('+0', '0', 'Z'): [('+0',  'Z')],
         ('+0', '0', 'X'): [('+0',  'X')],
@@ -243,7 +243,7 @@ def create_3equal_PDA ():
         ('-0', '0', 'X'): [('-0',  'X')],
         ('-0', '1', 'Z'): [('-1',  'Z')],
         ('-0', '1', 'X'): [('-1',  'X')],
-        ('-1', '0', 'Z'): [('-0', 'ZX')],
+        ('-1', '0', 'Z'): [('-0', 'XZ')],
         ('-1', '0', 'X'): [('-0', 'XX')],
         ('-1', '1', 'Z'): [('+2',  'Z'), ('END_0', '')],
         ('-1', '1', 'X'): [('-2',   '')],
@@ -257,7 +257,7 @@ def create_3equal_PDA ():
         ('+2', '1', 'X'): [('+2',  'X')],
         ('+1', '0', 'Z'): [('-0',  'Z')],
         ('+1', '0', 'X'): [('+0',   '')],
-        ('+1', '1', 'Z'): [('+2', 'ZX')],
+        ('+1', '1', 'Z'): [('+2', 'XZ')],
         ('+1', '1', 'X'): [('+2', 'XX')],
         ('+0', '0', 'Z'): [('+0',  'Z')],
         ('+0', '0', 'X'): [('+0',  'X')],
@@ -280,7 +280,7 @@ def create_5equal_PDA ():
         ('+1', '0', 'X'): [('+0', '')],
         ('+1', '0', 'Z'): [('-0', 'Z')],
         ('+1', '1', 'X'): [('+3', 'XX')],
-        ('+1', '1', 'Z'): [('+3', 'ZX'), ('END_0', 'Z')],
+        ('+1', '1', 'Z'): [('+3', 'XZ'), ('END_0', 'Z')],
         ('+2', '0', 'X'): [('+1', 'X')],
         ('+2', '0', 'Z'): [('+1', 'Z')],
         ('+2', '1', 'X'): [('+3', 'X'), ('END_1', 'X')],
@@ -288,7 +288,7 @@ def create_5equal_PDA ():
         ('+3', '0', 'X'): [('+1', '')],
         ('+3', '0', 'Z'): [('-1', 'Z')],
         ('+3', '1', 'X'): [('+4', 'XX')],
-        ('+3', '1', 'Z'): [('+4', 'ZX')],
+        ('+3', '1', 'Z'): [('+4', 'XZ')],
         ('+4', '0', 'X'): [('+2', 'X')],
         ('+4', '0', 'Z'): [('+2', 'Z')],
         ('+4', '1', 'X'): [('+4', 'X')],
@@ -298,7 +298,7 @@ def create_5equal_PDA ():
         ('-0', '1', 'X'): [('-2', 'X')],
         ('-0', '1', 'Z'): [('-2', 'Z')],
         ('-1', '0', 'X'): [('-0', 'XX')],
-        ('-1', '0', 'Z'): [('-0', 'ZX')],
+        ('-1', '0', 'Z'): [('-0', 'XZ')],
         ('-1', '1', 'X'): [('-3', '')],
         ('-1', '1', 'Z'): [('+3', 'Z')],
         ('-2', '0', 'X'): [('-1', 'X')],
@@ -306,7 +306,7 @@ def create_5equal_PDA ():
         ('-2', '1', 'X'): [('-3', 'X')],
         ('-2', '1', 'Z'): [('-3', 'Z')],
         ('-3', '0', 'X'): [('-1', 'XX')],
-        ('-3', '0', 'Z'): [('-1', 'ZX')],
+        ('-3', '0', 'Z'): [('-1', 'XZ')],
         ('-3', '1', 'X'): [('-4', '')],
         ('-3', '1', 'Z'): [('+4', 'Z'), ('END_0', 'Z')],
         ('-4', '0', 'X'): [('-2', 'X')],
@@ -348,7 +348,7 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
                         delta[('+'+s, si, z)] = [('+'+new_carry, z)]
                     elif (new_kn_digit % 2 == 1):
                         assert (i == 0) # n goes up by 0, kn goes up by 1
-                        delta[('-'+s, si, z)] = [('-'+new_carry, z+'X')]
+                        delta[('-'+s, si, z)] = [('-'+new_carry, 'X'+z)]
                         if (z == 'X'):
                             delta[('+'+s, si, z)] = [('+'+new_carry, '')]
                         else:
@@ -356,7 +356,7 @@ def create_flimsy_PDA (k): # Only works for k=3 so far
                     else:
                         assert (new_kn_digit % 2 == 0)
                         assert (i == 1)  # n goes up by 1, kn goes up by 0
-                        delta[('+'+s, si, z)] = [('+'+new_carry, z+'X')]
+                        delta[('+'+s, si, z)] = [('+'+new_carry, 'X'+z)]
                         if (z == 'X'):
                             delta[('-'+s, si, z)] = [('-'+new_carry, '')]
                         else:
@@ -406,7 +406,7 @@ def create_k_equal_PDA (k): # Only works for k=3 so far
                         delta[('+'+s, si, z)] = [('+'+new_carry, z)]
                     elif (new_kn_digit % 2 == 1):
                         assert (i == 0) # n goes up by 0, kn goes up by 1
-                        delta[('-'+s, si, z)] = [('-'+new_carry, z+'X')]
+                        delta[('-'+s, si, z)] = [('-'+new_carry, 'X'+z)]
                         if (z == 'X'):
                             delta[('+'+s, si, z)] = [('+'+new_carry, '')]
                         else:
@@ -414,7 +414,7 @@ def create_k_equal_PDA (k): # Only works for k=3 so far
                     else:
                         assert (new_kn_digit % 2 == 0)
                         assert (i == 1)  # n goes up by 1, kn goes up by 0
-                        delta[('+'+s, si, z)] = [('+'+new_carry, z+'X')]
+                        delta[('+'+s, si, z)] = [('+'+new_carry, 'X'+z)]
                         if (z == 'X'):
                             delta[('-'+s, si, z)] = [('-'+new_carry, '')]
                         else:
@@ -478,12 +478,12 @@ if (len(sys.argv) > 1) and (sys.argv):
     output = cfg.to_Maple() # String array
     print_array_to_file(output, fname)
 else:
-    pda = create_dyck_PDA()
+    pda = create_k_equal_PDA(3)
     # print_array(pda.to_string_array())
     cfg = pda.to_CFG()
     # print_array(cfg.to_string_array())
     # print_array(cfg.to_Maple())
-    print_array(cfg.generate_values(100))
+    print_array(cfg.generate_values(20))
     
     # pda = create_k_equal_PDA(5)
     # print_array_to_file(pda.output_gv(), './5_equal.gv')

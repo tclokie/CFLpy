@@ -61,7 +61,7 @@ class CFG:
             for a in pda.alphabet:
                 for A in pda.stack_alphabet:
                     if ((q, a, A) in pda.transitions):
-                        for (q_1, B) in pda.transitions[(q, a, A)]: # Generalize this part?
+                        for (q_1, B) in pda.transitions[(q, a, A)]:
                             m = len(B)
                             if (m == 0): # pop top of stack
                                 self.productions[(q, A, q_1)].append([a])
@@ -70,9 +70,9 @@ class CFG:
                                 for q_2 in pda.states:
                                     self.productions[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
                             else: # push onto stack
-                                assert (m == 2) # Sanity check
-                                B_1 = B[1]
-                                B_2 = B[0]
+                                assert (m == 2) # Sanity check that we never push more than one symbol at a time
+                                B_1 = B[0]
+                                B_2 = B[1]
                                 for q_2 in pda.states:
                                     for q_3 in pda.states:
                                         self.productions[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
@@ -226,6 +226,7 @@ class CFG:
 
             if (not contains_var):
                 output.append(concat_string_array(next))
+        # output.sort()
         return output
 
     # # Generate some values to test; using leftmost derivations only; assuming flimsy CFG
@@ -334,7 +335,7 @@ class CFG:
 
         output.append("algeq := %[1]:")
         output.append("assume(x, positive):")
-        output.append("map(series, [solve(algeq, "+nice_names[self.start]+")], x);")
+        # output.append("map(series, [solve(algeq, "+nice_names[self.start]+")], x);")
         output.append("f := solve(algeq, "+nice_names[self.start]+"):")
         output.append("ps := f[1]; # You may need to change the value in here to get the correct root.")
         output.append("series(ps, x, 41);")
