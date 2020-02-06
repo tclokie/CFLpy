@@ -1,8 +1,11 @@
+from typing import List
+
 EMPTY_STRING = ''
 
+
 class PDA:
-    '''Pushdown Automata (accepting on empty stack only)'''
-    def __init__ (self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
+    """Pushdown Automata (accepting on empty stack only)"""
+    def __init__(self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
         self.states = states
         self.alphabet = alphabet
         self.stack_alphabet = stack_alphabet
@@ -12,8 +15,8 @@ class PDA:
         # TODO: eliminate unreachable/useless states, symbols, and transitions
         # TODO: make type/length assertions
 
-    ''' Converts PDA into CFG using Hopcroft & Ullman "triple" production'''
-    def to_CFG (self):
+    'Converts PDA into CFG using Hopcroft & Ullman "triple" production'
+    def to_CFG(self):
         from CFG import CFG
         cfg = CFG()
         cfg.init_variables(self)
@@ -23,25 +26,25 @@ class PDA:
         cfg.simplify()
         return cfg
 
-    # Simulates PDA on an input x; determines whether or not PDA accepts
-    def accepts (self, x): # boolean: does this PDA accept input x?
+    'Simulates PDA on an input x; determines whether or not PDA accepts'
+    def accepts(self, x):  # boolean: does this PDA accept input x?
         return self._accepts_(self.start_state, self.start_stack, x)
 
-    def _accepts_ (self, current_state, current_stack, x): # takes current stack as string with top as right
+    def _accepts_(self, current_state, current_stack, x):  # takes current stack as string with top as right
         # TODO: handle infinite epsilon loops
         if current_stack == EMPTY_STRING:
-            return (len(x) == 0)
+            return len(x) == 0
 
-        if (len(x) > 0):
+        if len(x) > 0:
             key = (current_state, x[0], current_stack[0])
-            if (key in self.transitions):
+            if key in self.transitions:
                 next_steps = self.transitions[key]
                 for (new_state, new_stack) in next_steps:
                     if self._accepts_(new_state, new_stack+current_stack[1:], x[1:]):
                         return True
 
         key = (current_state, EMPTY_STRING, current_stack[0])
-        if (key in self.transitions):
+        if key in self.transitions:
             next_epsilon_steps = self.transitions[key]
             for (new_state, new_stack) in next_epsilon_steps:
                 if self._accepts_(new_state, new_stack+current_stack[1:], x):
@@ -49,21 +52,20 @@ class PDA:
 
         return False
 
-    def simplify (self):
+    def simplify(self):
         # TODO: remove unreachable states
         # TODO: remove unproductive states
         # TODO: remove transitions to/from removed states
         # TODO: simplify alphabet, stack_alphabet
         return
 
-    def to_string_array (self):
-        output = []
-        output.append("Input alphabet: " + str(self.alphabet))
-        output.append("Stack alphabet: " + str(self.stack_alphabet))
-        output.append("Start state: " + str(self.start_state))
-        output.append("Start stack: " + str(self.start_stack))
-        output.append("States: " + str(self.states))
-        output.append("Transitions:")
+    def to_string_array(self):
+        output = ["Input alphabet: " + str(self.alphabet),
+                  "Stack alphabet: " + str(self.stack_alphabet),
+                  "Start state: " + str(self.start_state),
+                  "Start stack: " + str(self.start_stack),
+                  "States: " + str(self.states),
+                  "Transitions:"]
         temp = []
         for (a, b) in self.transitions.items():
             temp.append("\t" + str(a) + " -> " + str(b))
@@ -71,7 +73,7 @@ class PDA:
         output.extend(temp)
         return output
 
-    '''Outputs PDA as a .gv file, to be printed by dot'''
+    'Outputs PDA as a .gv file, to be printed by dot'
     def output_gv (self):
         output = ['digraph G {']
         output.append('\t"" [shape=none];') # Transition to start state
@@ -99,7 +101,7 @@ class PDA:
                         if new_stack_top == EMPTY_STRING:
                             new_stack_top = "&epsilon;"
                         build_string += str(read_symbol)+', '+str(stack_top)+'/'+str(new_stack_top)+'\\n'
-                    build_string = build_string[:-2] + '"];' # strip off the last \n and replace with "];
+                    build_string = build_string[:-2] + '"];'  # strip off the last \n and replace with "];
                     output.append(build_string)
 
         output.append('}')

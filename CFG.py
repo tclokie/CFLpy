@@ -4,27 +4,28 @@ from random import random
 
 EMPTY_STRING = ''
 
-def concat_string_array (A):
+
+def concat_string_array(A):
     result = ''
     for a in A:
         result += a
     return result
 
 
-
 class CFG:
-    '''Context-Free Grammar'''
+    """Context-Free Grammar"""
+
     # Default constructor; creates empty CFG
-    def __init__ (self):
+    def __init__(self):
         self.variables = {'S'}
         self.alphabet = {EMPTY_STRING}
         self.productions = dict()
-        self.start = 'S' # MUST BE a member of {variables}
+        self.start = 'S'  # MUST BE a member of {variables}
 
     # Create V: set of variables from PDA
-    def init_variables (self, pda):
+    def init_variables(self, pda):
         self.variables = {self.start}
-        
+
         # Define triple variables
         for q in pda.states:
             for A in pda.stack_alphabet:
@@ -32,7 +33,7 @@ class CFG:
                     self.variables.add((q, A, p))
 
     # Create alphabet
-    def add_to_alphabet (self, a): # a can be a string, a set (of strings), or a list/array (of strings)
+    def add_to_alphabet(self, a):  # a can be a string, a set (of strings), or a list/array (of strings)
         if type(a) == str:
             self.alphabet.add(a)
         elif type(a) == set:
@@ -43,14 +44,13 @@ class CFG:
                 self.alphabet.add(a)
 
     # Initialize the productions structure, based on the variables
-    def init_productions (self):
+    def init_productions(self):
         self.productions = dict()
         for v in self.variables:
             self.productions[v] = []
 
-
     # Fill in P
-    def populate_productions (self, pda):
+    def populate_productions(self, pda):
         for q in pda.states:
             # Productions for the start variable
             self.productions[self.start].append([(pda.start_state, pda.start_stack, q)])
@@ -58,17 +58,17 @@ class CFG:
             # Productions for the triple variables
             for a in pda.alphabet:
                 for A in pda.stack_alphabet:
-                    if ((q, a, A) in pda.transitions):
+                    if (q, a, A) in pda.transitions:
                         for (q_1, B) in pda.transitions[(q, a, A)]:
                             m = len(B)
-                            if (m == 0): # pop top of stack
+                            if m == 0:  # pop top of stack
                                 self.productions[(q, A, q_1)].append([a])
-                            elif (m == 1):
+                            elif m == 1:
                                 B_1 = B[0]
                                 for q_2 in pda.states:
                                     self.productions[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
-                            else: # push onto stack
-                                assert (m == 2) # Sanity check that we never push more than one symbol at a time
+                            else:  # push onto stack
+                                assert (m == 2)  # Sanity check that we never push more than one symbol at a time
                                 B_1 = B[0]
                                 B_2 = B[1]
                                 for q_2 in pda.states:
@@ -76,14 +76,14 @@ class CFG:
                                         self.productions[(q, A, q_3)].append([a, (q_1, B_1, q_2), (q_2, B_2, q_3)])
 
     # using DFS, return set of variables reachable from parameter
-    def _find_reachable_vars (self):
+    def _find_reachable_vars(self):
         seen = {self.start}
         stack = [self.start]
-        while (len(stack) > 0):
+        while len(stack) > 0:
             current = stack.pop()
             goes_to = self.productions[current]
             for prod_list in goes_to:
-                for i in range (len(prod_list)):
+                for i in range(len(prod_list)):
                     next = prod_list[i]
                     if (next in self.variables) and (not next in seen):
                         seen.add(next)
@@ -91,39 +91,38 @@ class CFG:
         return seen
 
     # using DFS, return set of variables that can produce an all-terminal string
-    def _find_productive_vars (self):
-        productive_vars = set() # first, find the set of productions that have terminal-only outputs
+    def _find_productive_vars(self):
+        productive_vars = set()  # first, find the set of productions that have terminal-only outputs
         for v in self.variables:
             for prod in self.productions[v]:
                 all_terminals = True
                 for elem in prod:
-                    if (elem in self.variables):
+                    if elem in self.variables:
                         all_terminals = False
                     else:
                         assert (elem in self.alphabet)
-                if (all_terminals):
+                if all_terminals:
                     productive_vars.add(v)
 
         change = True
-        while (change): # add variables that lead to such productions
+        while change:  # add variables that lead to such productions
             change = False
             for v in self.productions.keys():
-                if (not v in productive_vars): # don't revisit variables
-                    for v_p in self.productions[v]: # v_p is a single production of v
+                if not v in productive_vars:  # don't revisit variables
+                    for v_p in self.productions[v]:  # v_p is a single production of v
                         flag = True
-                        for p in v_p: # p is either a variable or a terminal
-                            if ((not p in self.alphabet) and (not p in productive_vars)):
+                        for p in v_p:  # p is either a variable or a terminal
+                            if (not p in self.alphabet) and (not p in productive_vars):
                                 flag = False
                         if flag:
                             productive_vars.add(v)
                             change = True
 
-        assert(self.start in productive_vars)
+        assert (self.start in productive_vars)
         return productive_vars
 
-
     # Eliminate dead production rules
-    def _eliminate_useless_productions (self):
+    def _eliminate_useless_productions(self):
         unproductive_vars = self.variables.difference(self._find_productive_vars())
         self._remove_variables(unproductive_vars)
         del unproductive_vars
@@ -131,7 +130,7 @@ class CFG:
         unreachable_vars = self.variables.difference(self._find_reachable_vars())
         self._remove_variables(unreachable_vars)
 
-    def _remove_variables (self, to_remove_from_V):
+    def _remove_variables(self, to_remove_from_V):
         to_remove_from_P = []
 
         # remove useless variables
@@ -140,20 +139,20 @@ class CFG:
             self.productions.pop(v)
             for prod_list in self.productions.values():
                 for production in prod_list:
-                    if (v in production):
+                    if v in production:
                         to_remove_from_P.append((prod_list, production))
         # remove useless productions
         for (prod_list, production) in to_remove_from_P:
-            if (production in prod_list):
+            if production in prod_list:
                 prod_list.remove(production)
 
-    def _replace_simple_productions (self):
+    def _replace_simple_productions(self):
         vars_to_replace = {}
 
         # now we simplify variables with exactly one production
         for v in self.variables:
-            if len(self.productions[v]) == 1: # replace instances of v with P[v]
-                if (v != self.start):
+            if len(self.productions[v]) == 1:  # replace instances of v with P[v]
+                if v != self.start:
                     vars_to_replace[v] = self.productions[v][0]
                 elif len(self.productions[v][0]) == 1 and self.productions[v][0][0] in self.variables:
                     vars_to_replace[self.productions[v][0][0]] = v
@@ -176,9 +175,9 @@ class CFG:
         for prod_list in self.productions.values():
             for production in prod_list:
                 empty_indices = []
-                for i in range (len(production)):
+                for i in range(len(production)):
                     if production[i] == EMPTY_STRING:
-                        empty_indices.insert(0,i) # prepend
+                        empty_indices.insert(0, i)  # prepend
                 for i in empty_indices:
                     production.pop(i)
                 if len(production) == 0:
@@ -188,33 +187,33 @@ class CFG:
         self._eliminate_useless_productions()
         self._replace_simple_productions()
 
-
     # Count number of variables
-    def count_variables (self):
+    def count_variables(self):
         return len(self.variables)
 
     # Count number of productions
-    def count_productions (self):
+    def count_productions(self):
         count = 0
         for arr in self.productions.values():
             count += len(arr)
-        return count 
+        return count
 
-    # Generate $limit values to test; using leftmost derivations only
-    def generate (self, limit):
+        # Generate $limit values to test; using leftmost derivations only
+
+    def generate(self, limit):
         q = PriorityQueue()
-        q.put((1,[self.start]))
+        q.put((1, [self.start]))
         output = []
         while len(output) < limit and not q.empty():
             next = q.get()[1]
             contains_var = False
             i = 0
-            while (i < len(next) and not contains_var):
+            while i < len(next) and not contains_var:
                 part = next[i]
-                if (part in self.variables):
+                if part in self.variables:
                     contains_var = True
                     for production in self.productions[part]:
-                        new_array = next[0:i] + production + next[i+1:]
+                        new_array = next[0:i] + production + next[i + 1:]
                         new_tuple = (len(new_array) + random(), new_array)
                         q.put(new_tuple)
                 else:
@@ -222,7 +221,7 @@ class CFG:
 
                 i += 1
 
-            if (not contains_var):
+            if not contains_var:
                 output.append(concat_string_array(next))
         # output.sort()
         return output
@@ -267,13 +266,13 @@ class CFG:
     #     return flimsy
 
     # Convert CFG to PDA
-    def to_PDA (self):
+    def to_PDA(self):
         # TODO: Write this
         return
 
     # A helper function to make variable names more readable (i.e. V_i) and compatible with Maple and LaTeX
-    def _pretty_names_ (self):
-        nice_names = {self.start : "S"}
+    def _pretty_names_(self):
+        nice_names = {self.start: "S"}
         V = [self.start]
         for v in self.variables:
             if v != self.start:
@@ -282,10 +281,10 @@ class CFG:
         return (nice_names, V)
 
     # Print CFG in "nice" form
-    def to_string_array (self):
+    def to_string_array(self):
         (nice_names, V) = self._pretty_names_()
         output = []
-        for i in range (len(V)):
+        for i in range(len(V)):
             s = nice_names[V[i]] + "\t->\t"
             for prod_list in self.productions[V[i]]:
                 for prod in prod_list:
@@ -299,14 +298,14 @@ class CFG:
                         s += nice_names[prod]
                     s += ' '
                 s += "| "
-            output.append(s[:-3]) # remove the last three characters (should be an extra " | ")
+            output.append(s[:-3])  # remove the last three characters (should be an extra " | ")
         return output
 
     # Convert CFG to Maple code for analysis
-    def to_Maple (self):
+    def to_Maple(self):
         (nice_names, V) = self._pretty_names_()
         output = ["eqs := ["]
-        for i in range (len(V)):
+        for i in range(len(V)):
             s = '-' + nice_names[V[i]] + ' + '
             for p in self.productions[V[i]]:
                 for x in p:
@@ -317,29 +316,29 @@ class CFG:
                             s += "x*"
                     else:
                         assert x in self.variables
-                        s += nice_names[x]+"*"
-                s = s[:-1] + " + " # remove the last '*'
-            output.append(s[:-3] + ",") # remove the last three characters (should be an extra " + ")
-        output[-1] = output[-1][:-1] # remove the last ','
+                        s += nice_names[x] + "*"
+                s = s[:-1] + " + "  # remove the last '*'
+            output.append(s[:-3] + ",")  # remove the last three characters (should be an extra " + ")
+        output[-1] = output[-1][:-1]  # remove the last ','
         output.append("]:")
 
         s = "Groebner[Basis](eqs, lexdeg(["
-        for i in range (1, len(V)):
+        for i in range(1, len(V)):
             s += nice_names[V[i]] + ", "
-        if (len(V) > 1):
-            s = s[:-2] + "], [" # Remove the last ", "
+        if len(V) > 1:
+            s = s[:-2] + "], ["  # Remove the last ", "
         s += nice_names[V[0]] + "])):"
         output.append(s)
 
         output.append("algeq := %[1]:")
         output.append("assume(x, positive):")
         # output.append("map(series, [solve(algeq, "+nice_names[self.start]+")], x);")
-        output.append("f := solve(algeq, "+nice_names[self.start]+"):")
+        output.append("f := solve(algeq, " + nice_names[self.start] + "):")
         output.append("ps := f[1]; # You may need to change the value in here to get the correct root.")
         output.append("series(ps, x, 41);")
-        
-        lib_path = '"/u3/twaclokie/Flimsy/PDAWESOME/maple_files"'
-        output.append("libname := "+lib_path+",libname:")
+
+        lib_path = '"." # Make sure algolib is in your current directory.'
+        output.append("libname := " + lib_path + ",libname:")
         output.append("combine(equivalent(ps, x, n, 1));")
         output.append("combine(equivalent(ps, x, n, 2));")
         output.append("combine(equivalent(ps, x, n, 3));")
