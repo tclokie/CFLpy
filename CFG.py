@@ -1,6 +1,6 @@
 from PDA import PDA
-import queue # TODO: just import PriorityQueue
-import random # TODO: just import random.random
+from queue import PriorityQueue
+from random import random
 
 EMPTY_STRING = ''
 
@@ -16,7 +16,7 @@ class CFG:
     '''Context-Free Grammar'''
     # Default constructor; creates empty CFG
     def __init__ (self):
-        self.variables = set()
+        self.variables = {'S'}
         self.alphabet = {EMPTY_STRING}
         self.productions = dict()
         self.start = 'S' # MUST BE a member of {variables}
@@ -201,8 +201,8 @@ class CFG:
         return count 
 
     # Generate $limit values to test; using leftmost derivations only
-    def generate_values (self, limit):
-        q = queue.PriorityQueue()
+    def generate (self, limit):
+        q = PriorityQueue()
         q.put((1,[self.start]))
         output = []
         while len(output) < limit and not q.empty():
@@ -215,7 +215,7 @@ class CFG:
                     contains_var = True
                     for production in self.productions[part]:
                         new_array = next[0:i] + production + next[i+1:]
-                        new_tuple = (len(new_array) + random.random(), new_array)
+                        new_tuple = (len(new_array) + random(), new_array)
                         q.put(new_tuple)
                 else:
                     assert part in self.alphabet
@@ -229,7 +229,7 @@ class CFG:
 
     # # Generate some values to test; using leftmost derivations only; assuming flimsy CFG
     # def generate_flimsy_values (self, limit):
-    #     q = queue.PriorityQueue()
+    #     q = PriorityQueue()
     #     q.put((1,[self.start]))
     #     flimsy_numbers = set()
     #     while len(flimsy_numbers) < limit and not q.empty():
@@ -242,7 +242,7 @@ class CFG:
     #                 contains_var = True
     #                 for production in self.productions[part]:
     #                     new_array = next[0:i] + production + next[i+1:]
-    #                     new_tuple = (len(new_array) + random.random(), new_array)
+    #                     new_tuple = (len(new_array) + random(), new_array)
     #                     q.put(new_tuple)
     #             else:
     #                 assert part in self.alphabet

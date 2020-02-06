@@ -24,10 +24,10 @@ class PDA:
         return cfg
 
     # Simulates PDA on an input x; determines whether or not PDA accepts
-    def simulate (self, x): # boolean: does this PDA accept input x?
-        return self._simulate_(self.start_state, self.start_stack, x)
+    def accepts (self, x): # boolean: does this PDA accept input x?
+        return self._accepts_(self.start_state, self.start_stack, x)
 
-    def _simulate_ (self, current_state, current_stack, x): # takes current stack as string with top as right
+    def _accepts_ (self, current_state, current_stack, x): # takes current stack as string with top as right
         # TODO: handle infinite epsilon loops
         if current_stack == EMPTY_STRING:
             return (len(x) == 0)
@@ -37,14 +37,14 @@ class PDA:
             if (key in self.transitions):
                 next_steps = self.transitions[key]
                 for (new_state, new_stack) in next_steps:
-                    if self._simulate_(new_state, new_stack+current_stack[1:], x[1:]):
+                    if self._accepts_(new_state, new_stack+current_stack[1:], x[1:]):
                         return True
 
         key = (current_state, EMPTY_STRING, current_stack[0])
         if (key in self.transitions):
             next_epsilon_steps = self.transitions[key]
             for (new_state, new_stack) in next_epsilon_steps:
-                if self._simulate_(new_state, new_stack+current_stack[1:], x):
+                if self._accepts_(new_state, new_stack+current_stack[1:], x):
                     return True
 
         return False
