@@ -1,9 +1,11 @@
 To execute, run ``python3 main.py``
 
-To use this software, you should add your PDAs and CFGs and operations to the ``main.py`` file.
+To use this software, you should add your PDAs and CFGs and operations to the ``main.py`` file. See ``pda_factory.py`` for a list of pre-built PDAs.
 
 To build a PDA, call the constructor ``PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)`` where ``states``, ``alphabet``, and ``stack_alphabet`` are iterable structures (preferably sets) containing strings. Note that ``alphabet`` should contain the empty string, but ``stack_alphabet`` should not. The string ``start_state`` must be a member of ``states``, and ``start_stack`` should be a string of length 1 that is a member of ``stack_alphabet``.
 Lastly, ``transitions`` is a dictionary mapping `(current_state, read_symbol, stack_top)` to a list of pairs of the form `(next_state, new_stack_top)`.
+
+To build a *k*-flimsy PDA, use `pda_factory.create_flimsy_pda(k)`. To build a *k*-equal PDA, use `pda_factory.create_k_equal_pda(k)`.
 
 To convert a PDA ``pda`` into a CFG, use the function ``pda.to_CFG()``
 
