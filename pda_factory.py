@@ -321,7 +321,7 @@ def create_5equal_PDA():
 
 
 # Create a PDA to accept all k-flimsy binary numbers
-def create_flimsy_PDA(k):  # Only works for k=3 so far
+def create_flimsy_PDA(k):
     assert (type(k) == int) and (k > 1) and (k % 2 == 1)
     states = {'END_0'}
     alphabet = {'0', '1', EMPTY_STRING}
@@ -381,7 +381,7 @@ def create_flimsy_PDA(k):  # Only works for k=3 so far
 
 
 # Create a PDA to accept all n where b(n) = b(kn)
-def create_k_equal_PDA(k):  # Only works for k=3 so far
+def create_k_equal_PDA(k):
     assert (type(k) == int) and (k > 1) and (k % 2 == 1)
     states = {'END_0'}
     alphabet = {'0', '1', EMPTY_STRING}
@@ -499,4 +499,78 @@ def create_2_flimsy_ternary_PDA():
         ('END_0', '', 'Z'): [('END_0', '')],
         ('END_0', '', 'X'): [('END_0', '')]
     }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
+
+
+def _char_to_int(c):  # Get integer from generalized ASCII number
+    return ord(c) - ord('0')
+
+
+def _int_to_char(i):  # Get ASCII character for given number
+    return chr(ord('0')+i)
+
+
+# Create a PDA to accept all k-flimsy binary numbers
+def create_base_b_k_flimsy_PDA(b, k): 
+    assert (type(k) == int) and (type(b) == int) and (k > 1) and (b > 1)
+    states = {'END_0'}
+    alphabet = {EMPTY_STRING}
+    for i in range(b):
+        alphabet.add(_int_to_char(i))
+    stack_alphabet = {'Z', 'X'}
+    start_state = '-0'
+    start_stack = 'Z'
+    transitions = {('END_0', EMPTY_STRING, 'Z'): [('END_0', EMPTY_STRING)],
+                   ('END_0', EMPTY_STRING, 'X'): [('END_0', EMPTY_STRING)]}
+
+    for carry in range(k):
+        s = _int_to_char(carry)
+        states.add('-' + s)
+        states.add('+' + s)
+        for si in alphabet:
+            if si != EMPTY_STRING:
+                i = _char_to_int(si)
+                added = i * k + carry
+                new_kn_digit = added % b
+                new_carry = _int_to_char(added // b)
+                stack_change = i - new_kn_digit  # if positive, push on + state and pop on - state; else vice versa
+                for z in stack_alphabet:
+                    if stack_change == 0:
+                        transitions[('-' + s, si, z)] = [('-' + new_carry, z)]
+                        transitions[('+' + s, si, z)] = [('+' + new_carry, z)]
+                    elif stack_change == 1:
+                        transitions[('+' + s, si, z)] = [('+' + new_carry, 'X' + z)]
+                        new_stack = z
+                        new_sign = '+'
+                        if z == 'X':
+                            new_stack = EMPTY_STRING
+                            new_sign = '-'
+                        transitions[('-' + s, si, z)] = [(new_sign + new_carry, new_stack)]
+                    elif stack_change == -1:
+                        transitions[('-' + s, si, z)] = [('-' + new_carry, 'X' + z)]
+                        new_stack = z
+                        new_sign = '-'
+                        if z == 'X':
+                            new_stack = EMPTY_STRING
+                            new_sign = '+'
+                        transitions[('+' + s, si, z)] = [(new_sign + new_carry, new_stack)]
+                    else:
+                        assert (False)  # we need to make multiple pushes and multiple pops
+
+    # # Add new end states
+    # # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
+    # for i in range(int(math.log2(k))):
+    #     new_state = 'END_' + str(i + 1)
+    #     states.add(new_state)
+    #     one_less = 'END_' + str(i)
+    #     transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
+    #
+    # # 1-transitions that pop nothing from final states to END_x for some x?
+    # for carry in range(k):
+    #     current_state = '+' + str(carry)
+    #     required_pops = s_2(k + carry) - 1
+    #     transitions[(current_state, '1', 'X')].append(('END_' + str(required_pops), 'X'))
+    #     if required_pops == 0:
+    #         transitions[(current_state, '1', 'Z')].append(('END_' + str(required_pops), 'Z'))
+
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
