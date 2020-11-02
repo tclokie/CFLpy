@@ -155,6 +155,29 @@ def create_dyck_PDA():  # TODO: Test this
     }
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
 
+# For the language a^m b^n c^m
+def create_am_bn_cm_PDA():
+    states = {'q_0', 'q_1', 'q_2'}
+    alphabet = {'', 'a', 'b', 'c'}
+    stack_alphabet = {'Z', 'a'}
+    start_state = 'q_0'
+    start_stack = 'Z'
+    transitions = {
+        ('q_0', 'a', 'Z'): [('q_0', 'aZ')],
+        ('q_0', 'a', 'a'): [('q_0', 'aa')],
+        ('q_0', '', 'Z'): [('q_0', '')],
+        ('q_0', 'b', 'Z'): [('q_1', 'Z')],
+        ('q_0', 'b', 'a'): [('q_1', 'a')],
+        ('q_0', 'c', 'a'): [('q_2', '')],
+        ('q_1', 'b', 'Z'): [('q_1', 'Z')],
+        ('q_1', 'b', 'a'): [('q_1', 'a')],
+        ('q_1', '', 'Z'): [('q_1', '')],
+        ('q_1', 'c', 'a'): [('q_2', '')],
+        ('q_2', 'c', 'a'): [('q_2', '')],
+        ('q_2', '', 'Z'): [('q_2', '')],
+    }
+    return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
+
 
 # Create a PDA to accept all 3-flimsy binary numbers
 def create_3flimsy_PDA():

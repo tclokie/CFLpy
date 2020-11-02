@@ -150,6 +150,7 @@ class CFG:
         vars_to_replace = {}
 
         # now we simplify variables with exactly one production
+        # identify the variables to be replaced
         for v in self.variables:
             if len(self.productions[v]) == 1:  # replace instances of v with P[v]
                 if v != self.start:
@@ -157,19 +158,24 @@ class CFG:
                 elif len(self.productions[v][0]) == 1 and self.productions[v][0][0] in self.variables:
                     vars_to_replace[self.productions[v][0][0]] = v
                     self.productions[v] = self.productions[self.productions[v][0][0]]
+
+        # replace the variables in the list of productions
         for prod_list in self.productions.values():
             for production in prod_list:
-                for index in range(len(production)):
+                index = 0
+                while index < len(production):
                     if production[index] in vars_to_replace:
                         replacements = vars_to_replace[production[index]]
                         production.pop(index)
-                        i = index
                         for s in replacements:
-                            production.insert(i, s)
-                            i += 1
+                            production.insert(index, s)
+                            index += 1
+                        index -= 1
+                    index += 1
 
-        for v in vars_to_replace:
-            self.variables.remove(v)
+        # remove the variables
+        self._remove_variables(vars_to_replace)
+
 
         # now we remove empty strings from non-empty productions; combine multiple empties into one
         for prod_list in self.productions.values():
