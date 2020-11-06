@@ -578,22 +578,22 @@ def create_base_b_k_flimsy_PDA(b, k):
                             new_sign = '+'
                         transitions[('+' + s, si, z)] = [(new_sign + new_carry, new_stack)]
                     else:
-                        assert (False)  # we need to make multiple pushes and multiple pops
+                        assert False, stack_change  # we need to make multiple pushes and multiple pops
 
-    # # Add new end states
-    # # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
-    # for i in range(int(math.log2(k))):
-    #     new_state = 'END_' + str(i + 1)
-    #     states.add(new_state)
-    #     one_less = 'END_' + str(i)
-    #     transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
-    #
-    # # 1-transitions that pop nothing from final states to END_x for some x?
-    # for carry in range(k):
-    #     current_state = '+' + str(carry)
-    #     required_pops = s_2(k + carry) - 1
-    #     transitions[(current_state, '1', 'X')].append(('END_' + str(required_pops), 'X'))
-    #     if required_pops == 0:
-    #         transitions[(current_state, '1', 'Z')].append(('END_' + str(required_pops), 'Z'))
+    # Add new end states
+    # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
+    for i in range(int(math.log2(k))):
+        new_state = 'END_' + str(i + 1)
+        states.add(new_state)
+        one_less = 'END_' + str(i)
+        transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
+
+    # 1-transitions that pop nothing from final states to END_x for some x?
+    for carry in range(k):
+        current_state = '+' + _int_to_char(carry)
+        required_pops = s_2(k + carry) - 1
+        transitions[(current_state, '1', 'X')].append(('END_' + str(required_pops), 'X'))
+        if required_pops == 0:
+            transitions[(current_state, '1', 'Z')].append(('END_' + str(required_pops), 'Z'))
 
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
