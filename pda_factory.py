@@ -533,9 +533,88 @@ def _int_to_char(i):  # Get ASCII character for given number
     return chr(ord('0')+i)
 
 
+def _create_flimsy_transitions(states: set, transitions: dict, stack_change: int, old_carry: str, new_carry: str, read_char: str):
+    if stack_change == 0:
+        transitions[('-' + old_carry, read_char, 'Z')] = [('-' + new_carry, 'Z')]
+        transitions[('-' + old_carry, read_char, 'X')] = [('-' + new_carry, 'X')]
+        transitions[('+' + old_carry, read_char, 'Z')] = [('+' + new_carry, 'Z')]
+        transitions[('+' + old_carry, read_char, 'X')] = [('+' + new_carry, 'X')]
+
+    elif stack_change == 1:
+        transitions[('+' + old_carry, read_char, 'Z')] = [('+' + new_carry, 'XZ')]
+        transitions[('+' + old_carry, read_char, 'X')] = [('+' + new_carry, 'XX')]
+        transitions[('-' + old_carry, read_char, 'Z')] = [('+' + new_carry, 'Z')]
+        transitions[('-' + old_carry, read_char, 'X')] = [('-' + new_carry, EMPTY_STRING)]
+
+    elif stack_change == -1:
+        transitions[('-' + old_carry, read_char, 'Z')] = [('-' + new_carry, 'XZ')]
+        transitions[('-' + old_carry, read_char, 'X')] = [('-' + new_carry, 'XX')]
+        transitions[('+' + old_carry, read_char, 'Z')] = [('-' + new_carry, 'Z')]
+        transitions[('+' + old_carry, read_char, 'X')] = [('+' + new_carry, EMPTY_STRING)]
+
+    elif stack_change > 1:
+        current_state_plus = '+'+old_carry
+        current_state_minus = '-'+old_carry
+        while stack_change > 1:
+            stack_change -= 1
+            intermediate_state_plus = 'push_'+str(stack_change)+'_to_+'+new_carry
+            intermediate_state_minus = 'pop_'+str(stack_change)+'_to_-'+new_carry
+            transitions[(current_state_plus, read_char, 'Z')] = [(intermediate_state_plus, 'XZ')]
+            transitions[(current_state_plus, read_char, 'X')] = [(intermediate_state_plus, 'XX')]
+            transitions[(current_state_minus, read_char, 'Z')] = [(intermediate_state_plus, 'Z')]
+            transitions[(current_state_minus, read_char, 'X')] = [(intermediate_state_minus, EMPTY_STRING)]
+
+            if intermediate_state_plus in states and intermediate_state_minus in states:
+                return
+            states.add(intermediate_state_plus)
+            states.add(intermediate_state_minus)
+
+            current_state_plus = intermediate_state_plus
+            current_state_minus = intermediate_state_minus
+            read_char = EMPTY_STRING
+
+        final_state_plus = '+'+new_carry
+        final_state_minus = '-'+new_carry
+        transitions[(current_state_plus, read_char, 'Z')] = [(final_state_plus, 'XZ')]
+        transitions[(current_state_plus, read_char, 'X')] = [(final_state_plus, 'XX')]
+        transitions[(current_state_minus, read_char, 'Z')] = [(final_state_plus, 'Z')]
+        transitions[(current_state_minus, read_char, 'X')] = [(final_state_minus, EMPTY_STRING)]
+
+    elif stack_change < -1:
+        current_state_plus = '+' + old_carry
+        current_state_minus = '-' + old_carry
+        while stack_change < -1:
+            stack_change += 1
+            intermediate_state_plus = 'pop_' + str(stack_change) + '_to_+' + new_carry
+            intermediate_state_minus = 'push_' + str(stack_change) + '_to_-' + new_carry
+            transitions[(current_state_minus, read_char, 'Z')] = [(intermediate_state_minus, 'XZ')]
+            transitions[(current_state_minus, read_char, 'X')] = [(intermediate_state_minus, 'XX')]
+            transitions[(current_state_plus, read_char, 'Z')] = [(intermediate_state_minus, 'Z')]
+            transitions[(current_state_plus, read_char, 'X')] = [(intermediate_state_plus, EMPTY_STRING)]
+
+            if intermediate_state_plus in states and intermediate_state_minus in states:
+                return
+            states.add(intermediate_state_plus)
+            states.add(intermediate_state_minus)
+
+            current_state_plus = intermediate_state_plus
+            current_state_minus = intermediate_state_minus
+            read_char = EMPTY_STRING
+
+        final_state_plus = '+'+new_carry
+        final_state_minus = '-'+new_carry
+        transitions[(current_state_minus, read_char, 'Z')] = [(final_state_minus, 'XZ')]
+        transitions[(current_state_minus, read_char, 'X')] = [(final_state_minus, 'XX')]
+        transitions[(current_state_plus, read_char, 'Z')] = [(final_state_minus, 'Z')]
+        transitions[(current_state_plus, read_char, 'X')] = [(final_state_plus, EMPTY_STRING)]
+
+
 # Create a PDA to accept all k-flimsy binary numbers
 def create_base_b_k_flimsy_PDA(b, k): 
-    assert (type(k) == int) and (type(b) == int) and (k > 1) and (b > 1)
+    assert (type(k) == int) and (type(b) == int) and (k >= 1) and (b > 1)
+    while k % b == 0:
+        k //= b
+
     states = {'END_0'}
     alphabet = {EMPTY_STRING}
     for i in range(b):
@@ -557,28 +636,7 @@ def create_base_b_k_flimsy_PDA(b, k):
                 new_kn_digit = added % b
                 new_carry = _int_to_char(added // b)
                 stack_change = i - new_kn_digit  # if positive, push on + state and pop on - state; else vice versa
-                for z in stack_alphabet:
-                    if stack_change == 0:
-                        transitions[('-' + s, si, z)] = [('-' + new_carry, z)]
-                        transitions[('+' + s, si, z)] = [('+' + new_carry, z)]
-                    elif stack_change == 1:
-                        transitions[('+' + s, si, z)] = [('+' + new_carry, 'X' + z)]
-                        new_stack = z
-                        new_sign = '+'
-                        if z == 'X':
-                            new_stack = EMPTY_STRING
-                            new_sign = '-'
-                        transitions[('-' + s, si, z)] = [(new_sign + new_carry, new_stack)]
-                    elif stack_change == -1:
-                        transitions[('-' + s, si, z)] = [('-' + new_carry, 'X' + z)]
-                        new_stack = z
-                        new_sign = '-'
-                        if z == 'X':
-                            new_stack = EMPTY_STRING
-                            new_sign = '+'
-                        transitions[('+' + s, si, z)] = [(new_sign + new_carry, new_stack)]
-                    else:
-                        assert False, stack_change  # we need to make multiple pushes and multiple pops
+                _create_flimsy_transitions(states, transitions, stack_change, s, new_carry, si)
 
     # Add new end states
     # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
@@ -588,7 +646,7 @@ def create_base_b_k_flimsy_PDA(b, k):
         one_less = 'END_' + str(i)
         transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
 
-    # 1-transitions that pop nothing from final states to END_x for some x?
+    # nonzero-transitions that pop nothing from final states to END_x for some x?
     for carry in range(k):
         current_state = '+' + _int_to_char(carry)
         required_pops = s_2(k + carry) - 1

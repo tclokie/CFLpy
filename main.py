@@ -17,17 +17,13 @@ def write_iterable_to_file(lst, filename):
 def test_flimsy_pda(b, k):
     print("k =", k, ", b =", b)
     pda = pda_factory.create_base_b_k_flimsy_PDA(b, k)
-    # write_iterable_to_file(pda.output_gv(), ('{:02d}'.format(k))+'-flimsy-ternary.gv')
-    for m in range(1, 11):
-        # count = 0
-        # for n in range (2**(m-1), 2**m):
-        # for n in range (3**(m-1), 3**m):
-        for n in range(b ** (m - 1), b ** m):
-            pda_flimsiness = pda.accepts(pda_factory.base_b(n, b)[::-1])
-            real_flimsiness = pda_factory.s_b(n, b) > pda_factory.s_b(k * n, b)
+    # write_iterable_to_file(pda.output_gv(), ('{:02d}'.format(k))+'-flimsy-base-'+str(b)+'-pda.gv')
+    for n in range(0, 2**9):
+        pda_flimsiness = pda.accepts(pda_factory.base_b(n, b)[::-1])
+        real_flimsiness = pda_factory.s_b(n, b) > pda_factory.s_b(k * n, b)
 
-            if pda_flimsiness != real_flimsiness:
-                print(n, pda_factory.base_b(n, b), pda_factory.base_b(k * n, b), real_flimsiness)
+        if pda_flimsiness != real_flimsiness:
+            print(n, pda_factory.base_b(n, b), pda_factory.base_b(k * n, b), real_flimsiness)
 
 
 def __main__():
@@ -66,7 +62,7 @@ def next_lex_string(word, alphabet):
             return word[:index] + next_char + alphabet[0]*(len(word) - index - 1)
     return alphabet[0] * (len(word) + 1)
 
-# __main__()
+__main__()
 
-pda = pda_factory.create_base_b_k_flimsy_PDA(4,2)
-write_iterable_to_file(pda.output_gv(), '02-flimsy-base-4.gv')
+# pda = pda_factory.create_base_b_k_flimsy_PDA(4,2)
+# write_iterable_to_file(pda.output_gv(), '02-flimsy-base-4.gv')

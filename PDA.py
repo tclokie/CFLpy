@@ -15,6 +15,30 @@ class PDA:
         # TODO: eliminate unreachable/useless states, symbols, and transitions
         # TODO: make type/length assertions
 
+    @staticmethod
+    def from_json(filename):
+        import json
+        try:
+            f = open(filename, 'r')
+            obj = json.load(f)
+            f.close()
+            states = obj.states
+            alphabet = obj.alphabet
+            stack_alphabet = obj.stack_alphabet
+            start_state = obj.start_state
+            start_stack = obj.start_stack
+            transitions = obj.transitions
+            return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
+        except Exception as exception:
+            print("ERROR: could not load", filename, "as PDA.", exception)
+
+
+    def export_to_json(self, filename):
+        import json
+        f = open(filename, 'w')
+        json.dump(self, f)
+        f.close()
+
     'Converts PDA into CFG using Hopcroft & Ullman "triple" production'
     def to_CFG(self):
         from CFG import CFG

@@ -68,7 +68,7 @@ class CFG:
                                 for q_2 in pda.states:
                                     self.productions[(q, A, q_2)].append([a, (q_1, B_1, q_2)])
                             else:  # push onto stack
-                                assert (m == 2)  # Sanity check that we never push more than one symbol at a time
+                                assert (m == 2, "Pushing more than one symbol at a time is not supported")  # Sanity check that we never push more than one symbol at a time
                                 B_1 = B[0]
                                 B_2 = B[1]
                                 for q_2 in pda.states:
