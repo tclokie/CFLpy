@@ -585,8 +585,8 @@ def _create_flimsy_transitions(states: set, transitions: dict, stack_change: int
         current_state_minus = '-' + old_carry
         while stack_change < -1:
             stack_change += 1
-            intermediate_state_plus = 'pop_' + str(stack_change) + '_to_+' + new_carry
-            intermediate_state_minus = 'push_' + str(stack_change) + '_to_-' + new_carry
+            intermediate_state_plus = 'pop_' + str(-stack_change) + '_to_+' + new_carry
+            intermediate_state_minus = 'push_' + str(-stack_change) + '_to_-' + new_carry
             transitions[(current_state_minus, read_char, 'Z')] = [(intermediate_state_minus, 'XZ')]
             transitions[(current_state_minus, read_char, 'X')] = [(intermediate_state_minus, 'XX')]
             transitions[(current_state_plus, read_char, 'Z')] = [(intermediate_state_minus, 'Z')]
@@ -615,16 +615,34 @@ def create_base_b_k_flimsy_PDA(b, k):
     while k % b == 0:
         k //= b
 
-    states = {'END_0'}
+    states = {'END'}
     alphabet = {EMPTY_STRING}
     for i in range(b):
         alphabet.add(_int_to_char(i))
     stack_alphabet = {'Z', 'X'}
     start_state = '-0'
     start_stack = 'Z'
-    transitions = {('END_0', EMPTY_STRING, 'Z'): [('END_0', EMPTY_STRING)],
-                   ('END_0', EMPTY_STRING, 'X'): [('END_0', EMPTY_STRING)]}
+    transitions = {('END', EMPTY_STRING, 'Z'): [('END', EMPTY_STRING)],
+                   ('END', EMPTY_STRING, 'X'): [('END', EMPTY_STRING)]}
 
+    # Add END states, to pop at least/most i X's off the stack before reaching END
+    # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
+    states.add('pop_at_most_0_to_END')
+    transitions[('pop_at_most_0_to_END', EMPTY_STRING, 'Z')] = [('END', EMPTY_STRING)]
+    for i in range(int(2*(b-1)*math.log(k+1, b) + 0.01)+1): # TODO: confirm this
+        new_state = 'pop_at_least_' + str(i + 1) + '_to_END'
+        one_less = 'END' if i == 0 else ('pop_at_least_' + str(i) + '_to_END')
+        states.add(new_state)
+        transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
+
+        new_state = 'pop_at_most_' + str(i + 1) + '_to_END'
+        one_less = 'pop_at_most_' + str(i) + '_to_END'
+        states.add(new_state)
+        transitions[(new_state, EMPTY_STRING, 'Z')] = [('END', EMPTY_STRING)]
+        transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
+
+    # Add main states (+/- carry)
+    # Transitions between those states based on reading non-final input chars
     for carry in range(k):
         s = _int_to_char(carry)
         states.add('-' + s)
@@ -638,20 +656,31 @@ def create_base_b_k_flimsy_PDA(b, k):
                 stack_change = i - new_kn_digit  # if positive, push on + state and pop on - state; else vice versa
                 _create_flimsy_transitions(states, transitions, stack_change, s, new_carry, si)
 
-    # Add new end states
-    # Transitions from END_{i+1} to END_{i} that read nothing but pop an X
-    for i in range(int(math.log2(k))):
-        new_state = 'END_' + str(i + 1)
-        states.add(new_state)
-        one_less = 'END_' + str(i)
-        transitions[(new_state, EMPTY_STRING, 'X')] = [(one_less, EMPTY_STRING)]
-
-    # nonzero-transitions that pop nothing from final states to END_x for some x?
+    # nonzero-transitions that pop nothing from final (sign, carry) states to END_i state
     for carry in range(k):
-        current_state = '+' + _int_to_char(carry)
-        required_pops = s_2(k + carry) - 1
-        transitions[(current_state, '1', 'X')].append(('END_' + str(required_pops), 'X'))
-        if required_pops == 0:
-            transitions[(current_state, '1', 'Z')].append(('END_' + str(required_pops), 'Z'))
+        for read_char in alphabet:
+            if read_char != EMPTY_STRING and read_char != '0':
+                read_digit = _char_to_int(read_char)
+
+                plus_state = '+' + _int_to_char(carry)
+                min_required_pops = s_b(k*read_digit + carry, b) - read_digit
+                if min_required_pops > 0:
+                    transitions[(plus_state, read_char, 'X')].append(('pop_at_least_' + str(min_required_pops) + '_to_END', 'X'))
+                    if not ('pop_at_least_' + str(min_required_pops) + '_to_END') in states:
+                        print("MISSING POP AT LEAST", min_required_pops, "state")
+                        assert False
+                else:
+                    transitions[(plus_state, read_char, 'Z')].append(('END', 'Z'))
+                    transitions[(plus_state, read_char, 'X')].append(('END', 'X'))
+
+                minus_state = '-' + _int_to_char(carry)
+                max_required_pops = read_digit - s_b(k*read_digit + carry, b) - 1
+                if max_required_pops >= 0:
+                    transitions[(minus_state, read_char, 'Z')].append(('END', 'Z'))
+                for i in range(1, max_required_pops + 1):
+                    transitions[(minus_state, read_char, 'X')].append(('pop_at_most_' + str(i) + '_to_END', 'X'))
+                    if not ('pop_at_most_' + str(i) + '_to_END') in states:
+                        print("MISSING POP AT MOST", min_required_pops, "state")
+                        assert False
 
     return PDA(states, alphabet, stack_alphabet, start_state, start_stack, transitions)
