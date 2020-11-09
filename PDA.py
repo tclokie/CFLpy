@@ -5,15 +5,17 @@ EMPTY_STRING = ''
 
 class PDA:
     """Pushdown Automata (accepting on empty stack only)"""
-    def __init__(self, states, alphabet, stack_alphabet, start_state, start_stack, transitions):
+    def __init__(self, states: set, alphabet: set, stack_alphabet: set, start_state: str, start_stack: set, transitions: dict):
+        # TODO: make type/length assertions
+
         self.states = states
         self.alphabet = alphabet
         self.stack_alphabet = stack_alphabet
         self.start_state = start_state
         self.start_stack = start_stack # assume string of length 1
-        self.transitions = transitions # here the top of the stack is on the RIGHT of the stack_after string
-        # TODO: eliminate unreachable/useless states, symbols, and transitions
-        # TODO: make type/length assertions
+        self.transitions = transitions # here the top of the stack is on the left of the stack_after string
+
+        self.simplify() # eliminate unreachable/useless states and transitions
 
     @staticmethod
     def from_json(filename):
@@ -77,10 +79,41 @@ class PDA:
         return False
 
     def simplify(self):
-        # TODO: remove unreachable states
-        # TODO: remove unproductive states
-        # TODO: remove transitions to/from removed states
-        # TODO: simplify alphabet, stack_alphabet
+        changes = True
+        while changes:
+            changes = False
+            states_reachable_from_stacktop = {self.start_state: self.stack_alphabet}
+            for list_of_destinations in self.transitions.values():
+                for destination in list_of_destinations:
+                    state = destination[0]
+                    new_stack = destination[1]
+                    if state in states_reachable_from_stacktop:
+                        viable_stacktops = self.stack_alphabet if len(new_stack) == 0 else {new_stack[0]}
+                        states_reachable_from_stacktop[state] = states_reachable_from_stacktop[state].union(viable_stacktops)
+                    else:
+                        viable_stacktops = self.stack_alphabet if len(new_stack) == 0 else {new_stack[0]}
+                        states_reachable_from_stacktop[state] = viable_stacktops
+
+            # Remove unreachable states
+            states_to_remove = self.states.difference(states_reachable_from_stacktop.keys())
+            for state in states_to_remove:
+                print("REMOVED STATE:", state)
+                self.states.remove(state)
+                changes = True
+                for stack_top in self.stack_alphabet:
+                    for read_symbol in self.alphabet:
+                        if (state, read_symbol, stack_top) in self.transitions:
+                            self.transitions.pop((state, read_symbol, stack_top))
+
+            # Remove impossible transitions
+            for state in self.states:
+                for stack_top in self.stack_alphabet.difference(states_reachable_from_stacktop[state]):
+                    for read_symbol in self.alphabet:
+                        if (state, read_symbol, stack_top) in self.transitions:
+                            print("REMOVED TRANSITIONS:", (state, read_symbol, stack_top), "->", self.transitions[(state, read_symbol, stack_top)])
+                            self.transitions.pop((state, read_symbol, stack_top))
+                            changes = True
+
         return
 
     def to_string_array(self):
