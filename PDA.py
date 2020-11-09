@@ -97,7 +97,6 @@ class PDA:
             # Remove unreachable states
             states_to_remove = self.states.difference(states_reachable_from_stacktop.keys())
             for state in states_to_remove:
-                print("REMOVED STATE:", state)
                 self.states.remove(state)
                 changes = True
                 for stack_top in self.stack_alphabet:
@@ -110,7 +109,6 @@ class PDA:
                 for stack_top in self.stack_alphabet.difference(states_reachable_from_stacktop[state]):
                     for read_symbol in self.alphabet:
                         if (state, read_symbol, stack_top) in self.transitions:
-                            print("REMOVED TRANSITIONS:", (state, read_symbol, stack_top), "->", self.transitions[(state, read_symbol, stack_top)])
                             self.transitions.pop((state, read_symbol, stack_top))
                             changes = True
 
