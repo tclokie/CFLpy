@@ -4,7 +4,6 @@ from random import random
 
 EMPTY_STRING = ''
 
-
 def concat_string_array(A):
     result = ''
     for a in A:
@@ -118,7 +117,6 @@ class CFG:
                             productive_vars.add(v)
                             change = True
 
-        assert (self.start in productive_vars)
         return productive_vars
 
     # Eliminate dead production rules
@@ -135,12 +133,16 @@ class CFG:
 
         # remove useless variables
         for v in to_remove_from_V:
+            if v == self.start:
+                continue
+
             self.variables.remove(v)
             self.productions.pop(v)
             for prod_list in self.productions.values():
                 for production in prod_list:
                     if v in production:
                         to_remove_from_P.append((prod_list, production))
+
         # remove useless productions
         for (prod_list, production) in to_remove_from_P:
             if production in prod_list:

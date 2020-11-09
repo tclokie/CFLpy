@@ -27,6 +27,14 @@ def test_flimsy_pda(b, k):
             print(n, pda_factory.base_b(n, b), pda_factory.base_b(k * n, b), real_flimsiness)
             break
 
+def test_flimsy_cfg(b, k):
+    print("k =", k, ", b =", b)
+    cfg = pda_factory.create_base_b_k_flimsy_PDA(b, k).to_CFG()
+    generated_words = cfg.generate(2**16)
+    generated_set = set(generated_words)
+    if len(generated_words) != len(generated_set):
+        print("ERROR! Duplicate words detected")
+
 
 def __main__():
     k = 3
@@ -37,7 +45,11 @@ def __main__():
     if len(argv) > 2:
         b = int(argv[2])
 
-    test_flimsy_pda(b,k)
+    # test_flimsy_pda(b,k)
+
+    for b in range(2,18):
+        for k in range(1, 101//b + 1):
+            test_flimsy_cfg(b,k)
 
     # cfg = pda.to_CFG()
     # write_iterable_to_file(cfg.to_Maple(), ('{:02d}'.format(k))+'-flimsy-ternary.maple')
